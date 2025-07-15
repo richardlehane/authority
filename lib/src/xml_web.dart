@@ -21,8 +21,7 @@ class Session {
 
   int load(PlatformFile f) {
     if (f.bytes == null) {
-      //return DocumentModel.empty(title: f.name);
-      return documents.len - 1;
+      return empty();
     }
     final doc = XmlDocument.parse(String.fromCharCodes(f.bytes!));
     documents.add(doc);
