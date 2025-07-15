@@ -1,4 +1,4 @@
-import 'package:xml/xml.dart' show XmlElement;
+import 'package:xml/xml.dart';
 
 const String _template = '''
 <?xml version="1.0" encoding="UTF-8"?>
