@@ -4,14 +4,5 @@ import 'authority_none.dart' // Stub implementation
 import 'package:xml/xml.dart' show XmlElement;
 import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 
-const String template = '''
-<?xml version="1.0" encoding="UTF-8"?>
-<Authority xmlns="http://www.records.nsw.gov.au/schemas/RDA">
-	<Term itemno="1.0.0" type="function">
-    <Term itemno="1.1.0" type="activity">
-      <Class itemno="1.1.1" />
-		</Term>
-	</Term>
-</Authority>
-''';
+
 
