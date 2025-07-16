@@ -60,10 +60,7 @@ class Document {
   }
 
   void refreshTree() {
-    treeItems = addChildren(
-      termsClasses(document!.rootElement),
-      Counter(selectedItemIndex),
-    );
+    treeItems = Session().tree(sessionIndex, Counter(selectedItemIndex));
   }
 
   XmlElement? currentNode() {
