@@ -13,15 +13,22 @@ const String _template = '''
 
 class Session {
   List<XmlDocument> documents;
+  List<XmlElement?> nodes;
   
   // singleton
   Session._();
   static final Session _instance = Session._();
   factory Session() => _instance;
 
-  int empty() {
-    documents.add(XmlDocument.parse(_template));
+  int _init(XmlDocument doc) {
+    documents.add(doc);
+    nodes.add(nth(doc, 0));
     return documents.length - 1;
+  }
+	
+  int empty() {
+    XmlDocument doc = XmlDocument.parse(_template);
+    return _init(doc);
   }
 
   int load(PlatformFile f) {
@@ -29,12 +36,16 @@ class Session {
       return empty();
     }
     final doc = XmlDocument.parse(String.fromCharCodes(f.bytes!));
-    documents.add(doc);
-    return documents.length - 1;
+    return _init(doc);
   }
 
   List<TreeViewItem> tree(int index, Counter ctr) => documents[index].addChildren(termsClasses(doc.rootElement), ctr);
+	
   String asString(int index) => documents[index].toXmlString(pretty: true, indent: '\t');
+
+  void setCurrent(int index, int n) {
+    nodes[index] = nth(index, n);
+  }
 }
 
 List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
