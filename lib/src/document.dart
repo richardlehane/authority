@@ -1,63 +1,62 @@
-enum DocumentView {
-  editView,
-  sourceView;
+import 'xml_web.dart' show Session;
+import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
+
+enum View {
+  edit,
+  source;
 
   @override
   String toString() {
     switch (this) {
-      case DocumentView.editView:
+      case View.edit:
         return "edit";
-      case DocumentView.sourceView:
+      case View.source:
         return "source";
     }
   }
 }
 
-/// Model representing a document and its structure
-class DocumentModel {
+class Document {
   String title;
   String path;
   List<TreeViewItem>? treeItems;
   int selectedItemIndex;
-  DocumentView view = DocumentView.editView;
-  XmlDocument? document;
+  int sessionIndex;
+  View view = View.edit;
 
-  DocumentModel({
+  Document({
     required this.title,
     this.path = "",
     this.treeItems,
-    this.document,
     this.selectedItemIndex = 0,
+    this.sessionIndex = 0,
   });
 
   /// Create a new empty document model with default structure
-  factory DocumentModel.empty({String title = 'Untitled'}) {
-    final doc = XmlDocument.parse(blank);
+  factory Document.empty({String title = 'Untitled'}) {
+    Session sess = Session();
+    final sessionIndex = sess.empty();
     return DocumentModel(
       title: title,
-      treeItems: addChildren(termsClasses(doc.rootElement), Counter(0)),
-      document: doc,
+      treeItems: sess.tree(sessionIndex, Counter(0)),
+      sessionIndex: sessionIndex,
     );
   }
 
-  factory DocumentModel.load(PlatformFile f) {
-    if (f.bytes == null) {
-      return DocumentModel.empty(title: f.name);
-    }
-    final doc = XmlDocument.parse(String.fromCharCodes(f.bytes!));
+  factory Document.load(PlatformFile f) {
+    Session sess = Session();
+    final sessionIndex = sess.load(f);
     return DocumentModel(
       title: f.name,
-      treeItems: addChildren(termsClasses(doc.rootElement), Counter(0)),
-      document: doc,
+      // path: f.path, ???
+      treeItems: sess.tree(sessionIndex, Counter(0)),
+      sessionIndex: sessionIndex,
     );
   }
 
   @override
   String toString() {
-    if (document != null) {
-      return document!.toXmlString(pretty: true, indent: '\t');
-    }
-    return "";
+    return Session().asString(sessionIndex);
   }
 
   void refreshTree() {
@@ -133,24 +132,7 @@ class Counter {
   }
 }
 
-List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
-  return list.map((item) {
-    final NodeType nt =
-        (item.name.local == 'Term') ? NodeType.termType : NodeType.classType;
-    final int index = ctr.next();
-    final bool selected = ctr.isSelected();
-    return TreeViewItem(
-      leading:
-          (nt == NodeType.termType)
-              ? Icon(FluentIcons.fabric_folder)
-              : Icon(FluentIcons.page),
-      content: Text(title(item)),
-      value: (nt, index),
-      children: addChildren(termsClasses(item), ctr),
-      selected: selected,
-    );
-  }).toList();
-}
+
 
 TreeViewItem? treeNth(int n, List<TreeViewItem>? list) {
   if (list == null) {
@@ -199,14 +181,7 @@ String title(XmlElement el) {
       : '';
 }
 
-List<XmlElement> termsClasses(XmlElement el) {
-  if (el.name.local == 'Class') {
-    return [];
-  }
-  return el.childElements
-      .where((e) => e.name.local == 'Term' || e.name.local == 'Class')
-      .toList();
-}
+
 
 XmlElement? nth(XmlDocument? doc, int n) {
   int idx = -1;
