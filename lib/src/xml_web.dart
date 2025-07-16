@@ -46,6 +46,22 @@ class Session {
   void setCurrent(int index, int n) {
     nodes[index] = nth(index, n);
   }
+  // tree operations
+	
+  // node operations
+  String getElement(int index, String name) {
+    XmlElement? el = nodes[int];
+    if (el == null) return "";
+    XmlElement? t = el!.getElement(name);
+    if (t != null) {
+      return t.innerText;
+    }
+    return "";
+  }
+
+  
+  // multi operations
+	
 }
 
 List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
