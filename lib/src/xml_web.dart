@@ -12,7 +12,7 @@ const String _template = '''
 ''';
 
 class Session {
-  List<XmlDocument>? documents;
+  List<XmlDocument> documents;
   
   // singleton
   Session._();
@@ -21,7 +21,7 @@ class Session {
 
   int empty() {
     documents.add(XmlDocument.parse(_template));
-    return documents.len - 1;
+    return documents.length - 1;
   }
 
   int load(PlatformFile f) {
@@ -30,18 +30,11 @@ class Session {
     }
     final doc = XmlDocument.parse(String.fromCharCodes(f.bytes!));
     documents.add(doc);
-    return documents.len - 1;
+    return documents.length - 1;
   }
 
-  List<TreeViewItem> tree(int index, Counter ctr) {
-	XmlDocument doc = documents![index];
-  	return addChildren(termsClasses(doc.rootElement), ctr)
-  }
-
-  String asString(int index) {
-  	XmlDocument doc = documents![index];
-  	return doc.toXmlString(pretty: true, indent: '\t');
-  }
+  List<TreeViewItem> tree(int index, Counter ctr) => documents[index].addChildren(termsClasses(doc.rootElement), ctr);
+  String asString(int index) => documents[index].toXmlString(pretty: true, indent: '\t');
 }
 
 List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
