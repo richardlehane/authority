@@ -13,6 +13,11 @@ const String _template = '''
 
 class Session {
   List<XmlDocument>? documents;
+  
+  // singleton
+  Session._();
+  static final Session _instance = Session._();
+  factory Session() => _instance;
 
   int empty() {
     documents.add(XmlDocument.parse(_template));
@@ -27,4 +32,42 @@ class Session {
     documents.add(doc);
     return documents.len - 1;
   }
+
+  List<TreeViewItem> tree(int index, Counter ctr) {
+	XmlDocument doc = documents![index];
+  	return addChildren(termsClasses(doc.rootElement), ctr)
+  }
+
+  String asString(int index) {
+  	XmlDocument doc = documents![index];
+  	return doc.toXmlString(pretty: true, indent: '\t');
+  }
+}
+
+List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
+  return list.map((item) {
+    final NodeType nt =
+        (item.name.local == 'Term') ? NodeType.termType : NodeType.classType;
+    final int index = ctr.next();
+    final bool selected = ctr.isSelected();
+    return TreeViewItem(
+      leading:
+          (nt == NodeType.termType)
+              ? Icon(FluentIcons.fabric_folder)
+              : Icon(FluentIcons.page),
+      content: Text(title(item)),
+      value: (nt, index),
+      children: addChildren(termsClasses(item), ctr),
+      selected: selected,
+    );
+  }).toList();
+}
+
+List<XmlElement> termsClasses(XmlElement el) {
+  if (el.name.local == 'Class') {
+    return [];
+  }
+  return el.childElements
+      .where((e) => e.name.local == 'Term' || e.name.local == 'Class')
+      .toList();
 }
