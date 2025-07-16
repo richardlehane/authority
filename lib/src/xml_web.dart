@@ -71,3 +71,44 @@ List<XmlElement> termsClasses(XmlElement el) {
       .where((e) => e.name.local == 'Term' || e.name.local == 'Class')
       .toList();
 }
+
+String title(XmlElement el) {
+  String? itemno = el.getAttribute("itemno");
+  XmlElement? t =
+      (el.name.local == 'Class')
+          ? el.getElement('ClassTitle')
+          : el.getElement('TermTitle');
+  return (itemno != null)
+      ? (t != null)
+          ? "$itemno ${t.innerText}"
+          : itemno
+      : (t != null)
+      ? t.innerText
+      : '';
+}
+
+XmlElement? nth(XmlDocument? doc, int n) {
+  int idx = -1;
+  XmlElement? descend(XmlElement el) {
+    for (XmlElement child in el.childElements.where(
+      (e) => e.name.local == 'Term' || e.name.local == 'Class',
+    )) {
+      idx++;
+      if (idx == n) {
+        return child;
+      }
+      if (child.name.local == 'Term') {
+        var ret = descend(child);
+        if (ret != null) {
+          return ret;
+        }
+      }
+    }
+    return null;
+  }
+
+  if (doc == null) {
+    return null;
+  }
+  return descend(doc.rootElement);
+}
