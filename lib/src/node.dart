@@ -1,27 +1,26 @@
 enum NodeType { classType, termType }
 
-class CurrNode {
-  CurrNode(this.typ, this.el, this.reference);
+bool _isAttr(String name) => name[0] == name[0].toLowerCase();
+  
+class CurrentNode {
   NodeType typ;
-  XmlElement? el;
   (int, int) reference;
   Map<String, bool> updates = {};
+
+  CurrentNode(this.typ, this.reference);
 
   void mark(String name) {
     updates[name] = true;
   }
 
-  String getElement(String name) {
-    if (el == null) return "";
-    XmlElement? t = el!.getElement(name);
-    if (t != null) {
-      return t.innerText;
+  String get(String name) {
+    if _isAttr(name) {
+      return Session().getAttribute(reference.$1, name);
     }
-    return "";
+    return Session().getElement(reference.$1, name);
   }
 
-  void setElement(String name, String value) {
-    if (el == null) return;
+  void set(String name, String value) {
     final changed = updates[name] ?? false;
     if (!changed) return;
     updates[name] = false;
