@@ -1,5 +1,6 @@
-import 'xml_web.dart' show Session;
 import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
+import 'xml_web.dart' show Session;
+import 'node' show CurrentNode, NodeType;
 
 enum View {
   edit,
@@ -63,7 +64,7 @@ class Document {
     treeItems = Session().tree(sessionIndex, Counter(selectedItemIndex));
   }
 
-  XmlElement? currentNode() {
+  CurrentNode current() {
     return nth(document, selectedItemIndex);
   }
 
