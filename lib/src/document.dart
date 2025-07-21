@@ -1,6 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 import 'xml_web.dart' show Session;
-import 'node' show CurrentNode, NodeType;
+import 'node.dart' show CurrentNode, NodeType;
 
 enum View {
   edit,

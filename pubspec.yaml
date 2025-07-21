@@ -1,1 +1,16 @@
+name: authority
+description: >-
+  XML operations for authority editor.
+publish_to: none
+version: 0.0.1
+homepage: https://www.authorityeditor.com
 
+environment:
+  sdk: '^3.8.1'
+  
+dependencies:
+  xml: ^6.5.0
+  fluent_ui: ^4.11.3
+  
+dev_dependencies:
+  test: '>=1.15.0 <2.0.0'
