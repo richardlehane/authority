@@ -1,3 +1,5 @@
+import 'package:xml/xml.dart' show XmlElement;
+
 class MultiImpl {
   int len(String name) {
     return 0;
