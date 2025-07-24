@@ -1,6 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
+import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'xml_web.dart' show Session;
 import 'node.dart' show CurrentNode, NodeType;
+import 'counter.dart';
 
 enum View {
   edit,
@@ -37,7 +39,7 @@ class Document {
   factory Document.empty({String title = 'Untitled'}) {
     Session sess = Session();
     final sessionIndex = sess.empty();
-    return DocumentModel(
+    return Document(
       title: title,
       treeItems: sess.tree(sessionIndex, Counter(0)),
       sessionIndex: sessionIndex,
@@ -47,7 +49,7 @@ class Document {
   factory Document.load(PlatformFile f) {
     Session sess = Session();
     final sessionIndex = sess.load(f);
-    return DocumentModel(
+    return Document(
       title: f.name,
       // path: f.path, ???
       treeItems: sess.tree(sessionIndex, Counter(0)),
@@ -65,15 +67,11 @@ class Document {
   }
 
   CurrentNode current() {
-    return nth(document, selectedItemIndex);
+    return CurrentNode((sessionIndex, selectedItemIndex));
   }
 
   void drop(int n) {
-    XmlElement? el = nth(document, n);
-    if (el == null) {
-      return;
-    }
-    el.remove();
+    Session().remove(sessionIndex, n);
     n = (n == 0) ? 0 : n - 1;
     selectedItemIndex = n;
     refreshTree();

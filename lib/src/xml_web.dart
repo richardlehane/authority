@@ -53,7 +53,15 @@ class Session {
   void setCurrent(int index, int n) {
     nodes[index] = nth(documents[index], n);
   }
+
   // tree operations
+  void remove(int index, int n) {
+    XmlElement? el = nth(documents[index], n);
+    if (el == null) {
+      return;
+    }
+    el.remove();
+  }
 
   // node operations
   String getElement(int index, String name) {

@@ -6,11 +6,10 @@ enum NodeType { classType, termType }
 bool _isAttr(String name) => name[0] == name[0].toLowerCase();
 
 class CurrentNode {
-  NodeType typ;
   (int, int) reference;
   Map<String, bool> updates = {};
 
-  CurrentNode(this.typ, this.reference);
+  CurrentNode(this.reference);
 
   void mark(String name) {
     updates[name] = true;
