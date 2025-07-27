@@ -63,7 +63,7 @@ class CurrentNode {
   }
 
   String mGet(String name, int idx, String tok) {
-    return "";
+    return Session().mGet(reference.$1, name, idx, tok);
   }
 
   List<XmlElement>? mGetParagraphs(String name, int idx, String el) {
