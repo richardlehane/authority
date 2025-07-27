@@ -1,1 +1,2 @@
-export 'src/authority.dart' show NodeType, DocumentView;
+export 'src/document.dart' show View, Document;
+export 'src/node.dart' show NodeType, CurrentNode;
