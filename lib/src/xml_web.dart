@@ -351,13 +351,16 @@ const disposalElements = [
   };
   prev = prev.sublist(0, prev.indexOf(name) + 1);
   for (var n in el.children) {
-    if (n.nodeType != XmlNodeType.ELEMENT ||
-        prev.contains((n as XmlElement).localName)) {
-      if ((n as XmlElement).localName == name) multi++;
+    if (n.nodeType != XmlNodeType.ELEMENT) {
       pos++;
       continue;
     }
-    return (pos, multi);
+    if (prev.contains((n as XmlElement).localName)) {
+      if (n.localName == name) multi++;
+      pos++;
+      continue;
+    }
+    break;
   }
   return (pos, multi);
 }
