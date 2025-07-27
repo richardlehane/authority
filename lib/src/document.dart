@@ -70,6 +70,11 @@ class Document {
     return CurrentNode((sessionIndex, selectedItemIndex));
   }
 
+  void setCurrent(int index) {
+    selectedItemIndex = index;
+    Session().setCurrent(sessionIndex, index);
+  }
+
   void drop(int n) {
     Session().remove(sessionIndex, n);
     n = (n == 0) ? 0 : n - 1;
