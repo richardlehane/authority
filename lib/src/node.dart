@@ -39,4 +39,42 @@ class CurrentNode {
   void setParagraphs(String name, List<XmlElement> paras) {
     return Session().setParagraphs(reference.$1, name, paras);
   }
+
+  int mLen(String name) {
+    return Session().mLen(reference.$1, name);
+  }
+
+  int mAdd(String name, String el) {
+    return Session().mAdd(reference.$1, name, el);
+  }
+
+  void mDrop(String name, int idx) {} // todo
+
+  void mUp(String name, int idx) {} // todo
+
+  void mDown(String name, int idx) {} // todo
+
+  void mSet(String name, int idx, String tok, String val) {
+    return Session().mSet(reference.$1, name, idx, tok, val);
+  }
+
+  String mGet(String name, int idx, String tok) {
+    return "";
+  }
+
+  List<XmlElement>? mGetParagraphs(String name, int idx, String el) {
+    return null;
+  }
+
+  void mSetParagraphs(String name, int idx, String el, List<XmlElement>? val) {}
+
+  int fLen(String name, int idx, String tok) {
+    return 0;
+  }
+
+  String fGet(String name, int idx, String tok, int fidx) {
+    return "";
+  }
+
+  void fSet(String name, int idx, String tok, int fidx, String val) {}
 }

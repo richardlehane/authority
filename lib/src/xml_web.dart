@@ -57,10 +57,25 @@ class Session {
   // tree operations
   void remove(int index, int n) {
     XmlElement? el = nth(documents[index], n);
-    if (el == null) {
-      return;
-    }
+    if (el == null) return;
     el.remove();
+  }
+
+  void addChild(int index, int n, NodeType nt) {
+    XmlElement? el = nth(documents[index], n);
+    if (el == null) return;
+    el.children.add(
+      XmlElement(XmlName((nt == NodeType.termType) ? "Term" : "Class")),
+    );
+  }
+
+  void addSibling(int index, int n, NodeType nt) {
+    XmlElement? el = nth(documents[index], n);
+    if (el == null) return;
+    el.parentElement!.children.insert(
+      pos(el) + 1,
+      XmlElement(XmlName((nt == NodeType.termType) ? "Term" : "Class")),
+    );
   }
 
   // node operations
@@ -99,12 +114,9 @@ class Session {
       return;
     }
     // insert
-    NodeType typ = (el.name.local == "Term")
-        ? NodeType.termType
-        : NodeType.classType;
     t = XmlElement(XmlName(name), [], [XmlText(value)], false);
-    int p = insertPos(el, typ, name);
-    el.children.insert(p, t);
+    (int, int) p = insertPos(el, name);
+    el.children.insert(p.$1, t);
     return;
   }
 
@@ -135,22 +147,77 @@ class Session {
     if (parent == null) {
       // inserting
       parent = XmlElement(XmlName(name), [], paras, false);
-      NodeType typ = (el.name.local == "Term")
-          ? NodeType.termType
-          : NodeType.classType;
-      int p = insertPos(el, typ, name);
-      el.children.insert(p, parent);
+      (int, int) p = insertPos(el, name);
+      el.children.insert(p.$1, parent);
       return;
     }
     parent.children.removeWhere(
       (para) =>
           para.nodeType == XmlNodeType.ELEMENT &&
-          (para as XmlElement).name.local == "Paragraph",
+          (para as XmlElement).localName == "Paragraph",
     );
     parent.children.insertAll(0, paras);
   }
 
   // multi operations
+  int mLen(int index, String name) {
+    XmlElement? el = nodes[index];
+    if (el == null) return 0;
+    if (name == "Status") {
+      el = el.getElement("Status");
+      if (el == null) return 0;
+      return el.childElements.length;
+    }
+    if (name == "SeeReference") {
+      el = (el.name.local == "Term")
+          ? el.getElement("TermDescription")
+          : el.getElement("ClassDescription");
+      if (el == null) return 0;
+    }
+    return el.findElements(name).length;
+  }
+
+  int mAdd(int index, String name, String el) {
+    XmlElement? el = nodes[index];
+    if (el == null) return 0;
+    // todo: special case Status and SeeReference - SeeReference uses the el parameter
+    XmlElement t = XmlElement(XmlName(name), [], [], false);
+    (int, int) p = insertPos(el, name);
+    el.children.insert(p.$1, t);
+    return p.$2; // todo
+  }
+
+  void mSet(int index, String name, int idx, String tok, String val) {
+    XmlElement? el = nodes[index];
+    if (el == null) return;
+    // todo: Status and SeeReference
+    el = el.findElements(name).elementAt(idx);
+    XmlElement? t = el.getElement(tok);
+    // delete
+    if (val == "") {
+      if (t != null) el.children.remove(t);
+      return;
+    }
+    // update
+    if (t != null) {
+      t.innerText = val;
+      return;
+    }
+    // insert
+    t = XmlElement(XmlName(tok), [], [XmlText(val)], false);
+    (int, int) p = insertPos(el, tok);
+    el.children.insert(p.$1, t);
+    return;
+  }
+
+  String mGet(int index, String name, int idx, String tok) {
+    XmlElement? el = nodes[index];
+    if (el == null) return "";
+    el = el.findElements(name).elementAt(idx);
+    XmlElement? t = el.getElement(name);
+    if (t == null) return "";
+    return t.innerText;
+  }
 }
 
 List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
@@ -221,6 +288,15 @@ XmlElement? nth(XmlDocument? doc, int n) {
   return descend(doc.rootElement);
 }
 
+int pos(XmlNode el) {
+  int ret = 0;
+  while (el.previousSibling != null) {
+    ret++;
+    el = el.previousSibling!;
+  }
+  return ret;
+}
+
 // Constants to maintain element order
 // Also, after Comments Term or Class elements can be nested
 const termElements = [
@@ -245,18 +321,35 @@ const classElements = [
   "Comment", // multiple
 ];
 
+const disposalElements = [
+  "DisposalCondition",
+  "RetentionPeriod",
+  "DisposalTrigger",
+  "DisposalAction",
+  "TransferTo",
+  "CustomAction",
+  "CustomCustody",
+];
+
 // determine where to insert a new element
-int insertPos(XmlElement el, NodeType typ, String name) {
+(int, int) insertPos(XmlElement el, String name) {
   int pos = 0;
-  List<String> prev = (typ == NodeType.termType) ? termElements : classElements;
-  prev = prev.sublist(0, prev.indexOf(name));
+  int multi = 0;
+  List<String> prev = switch (el.localName) {
+    "Term" => termElements,
+    "Class" => classElements,
+    "Disposal" => disposalElements,
+    _ => [],
+  };
+  prev = prev.sublist(0, prev.indexOf(name) + 1);
   for (var n in el.children) {
     if (n.nodeType != XmlNodeType.ELEMENT ||
-        prev.contains((n as XmlElement).name.local)) {
+        prev.contains((n as XmlElement).localName)) {
+      if ((n as XmlElement).localName == name) multi++;
       pos++;
       continue;
     }
-    return pos;
+    return (pos, multi);
   }
-  return pos;
+  return (pos, multi);
 }

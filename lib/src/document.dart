@@ -78,13 +78,7 @@ class Document {
   }
 
   void addChild(int n, NodeType nt) {
-    XmlElement? el = nth(document, n);
-    if (el == null) {
-      return;
-    }
-    el.children.add(
-      XmlElement(XmlName((nt == NodeType.termType) ? "Term" : "Class")),
-    );
+    Session().addChild(sessionIndex, n, nt);
     // update selectedItemIndex by walking the treemenu
     final TreeViewItem? it = treeNth(n, treeItems);
     if (it != null) {
@@ -94,15 +88,7 @@ class Document {
   }
 
   void addSibling(int n, NodeType nt) {
-    XmlElement? el = nth(document, n);
-    if (el == null) {
-      return;
-    }
-    el.parentElement!.children.insert(
-      pos(el) + 1,
-      XmlElement(XmlName((nt == NodeType.termType) ? "Term" : "Class")),
-    );
-
+    Session().addSibling(sessionIndex, n, nt);
     // update selectedItemIndex by walking the treemenu
     final TreeViewItem? it = treeNth(n, treeItems);
     if (it != null) {
@@ -142,94 +128,4 @@ int treeDescendants(TreeViewItem item) {
     tally += treeDescendants(element);
   }
   return tally;
-}
-
-int pos(XmlNode el) {
-  int ret = 0;
-  while (el.previousSibling != null) {
-    ret++;
-    el = el.previousSibling!;
-  }
-  return ret;
-}
-
-class DocState {
-  int current;
-  List<DocumentModel> documents;
-
-  DocState({required this.current, required this.documents});
-}
-
-@Riverpod(keepAlive: true)
-class Documents extends _$Documents {
-  @override
-  DocState build() {
-    return DocState(current: 0, documents: [DocumentModel.empty()]);
-  }
-
-  DocumentModel current() {
-    return state.documents[state.current];
-  }
-
-  void load(PlatformFile f) {
-    state.documents.add(DocumentModel.load(f));
-    state.current = state.documents.length - 1;
-    ref.notifyListeners();
-  }
-
-  void newDocument() {
-    state.documents.add(DocumentModel.empty());
-    state.current = state.documents.length - 1;
-    ref.notifyListeners();
-  }
-
-  void drop(int index) {
-    if (state.documents.length > 1) {
-      if (state.current == state.documents.length - 1) {
-        state.current -= 1;
-      }
-      state.documents.removeAt(index);
-      ref.notifyListeners();
-    }
-  }
-
-  void paneChanged(int pane) {
-    state.current = pane;
-    ref.notifyListeners();
-  }
-
-  void selectionChanged(int index) {
-    state.documents[state.current].selectedItemIndex = index;
-    ref.notifyListeners();
-  }
-
-  void viewChanged(String view) {
-    switch (view) {
-      case "source":
-        state.documents[state.current].view = DocumentView.sourceView;
-      default:
-        state.documents[state.current].view = DocumentView.editView;
-    }
-    ref.notifyListeners();
-  }
-
-  void addChild(int n, NodeType nt) {
-    state.documents[state.current].addChild(n, nt);
-    ref.notifyListeners();
-  }
-
-  void addSibling(int n, NodeType nt) {
-    state.documents[state.current].addSibling(n, nt);
-    ref.notifyListeners();
-  }
-
-  void dropElement(int n) {
-    state.documents[state.current].drop(n);
-    ref.notifyListeners();
-  }
-
-  void refresh() {
-    state.documents[state.current].refreshTree();
-    ref.notifyListeners();
-  }
 }
