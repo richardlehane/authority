@@ -11,6 +11,10 @@ class CurrentNode {
 
   CurrentNode(this.reference);
 
+  NodeType typ() {
+    return Session().getType(reference.$1);
+  }
+
   void mark(String name) {
     updates[name] = true;
   }

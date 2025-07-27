@@ -79,6 +79,13 @@ class Session {
   }
 
   // node operations
+  NodeType getType(int index) {
+    XmlElement? el = nodes[index];
+    return (el != null && el.localName == "Term")
+        ? NodeType.termType
+        : NodeType.classType;
+  }
+
   String getElement(int index, String name) {
     XmlElement? el = nodes[index];
     if (el == null) return "";
