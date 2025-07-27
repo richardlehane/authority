@@ -221,7 +221,7 @@ class Session {
     XmlElement? el = nodes[index];
     if (el == null) return "";
     el = el.findElements(name).elementAt(idx);
-    XmlElement? t = el.getElement(name);
+    XmlElement? t = el.getElement(tok);
     if (t == null) return "";
     return t.innerText;
   }
