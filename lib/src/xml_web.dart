@@ -18,7 +18,7 @@ const String _template = '''
 
 class Session {
   List<XmlDocument> documents = [];
-  List<XmlElement?> nodes = [];
+  List<XmlElement?> nodes = []; // nodes are only term/class nodes
 
   // singleton
   Session._();
@@ -37,6 +37,7 @@ class Session {
   }
 
   int load(PlatformFile f) {
+    // todo: error handling
     if (f.bytes == null) {
       return empty();
     }
@@ -51,6 +52,7 @@ class Session {
       documents[index].toXmlString(pretty: true, indent: '\t');
 
   void setCurrent(int index, int n) {
+    // todo: authority/ context nodes?
     nodes[index] = nth(documents[index], n);
   }
 
@@ -78,6 +80,8 @@ class Session {
     );
   }
 
+  // todo: move up/ move down
+
   // node operations
   NodeType getType(int index) {
     XmlElement? el = nodes[index];
@@ -90,10 +94,7 @@ class Session {
     XmlElement? el = nodes[index];
     if (el == null) return "";
     XmlElement? t = el.getElement(name);
-    if (t != null) {
-      return t.innerText;
-    }
-    return "";
+    return (t != null) ? t.innerText : "";
   }
 
   String getAttribute(int index, String name) {

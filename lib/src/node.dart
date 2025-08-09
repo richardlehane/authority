@@ -67,18 +67,23 @@ class CurrentNode {
   }
 
   List<XmlElement>? mGetParagraphs(String name, int idx, String el) {
-    return null;
+    return null; // todo
   }
 
-  void mSetParagraphs(String name, int idx, String el, List<XmlElement>? val) {}
+  void mSetParagraphs(
+    String name,
+    int idx,
+    String el,
+    List<XmlElement>? val,
+  ) {} // todo
 
   int fLen(String name, int idx, String tok) {
-    return 0;
+    return 0; //todo
   }
 
   String fGet(String name, int idx, String tok, int fidx) {
-    return "";
+    return ""; // todo
   }
 
-  void fSet(String name, int idx, String tok, int fidx, String val) {}
+  void fSet(String name, int idx, String tok, int fidx, String val) {} //todo
 }

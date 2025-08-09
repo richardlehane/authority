@@ -101,6 +101,9 @@ class Document {
     }
     refreshTree();
   }
+
+  // todo: move up / move down
+  // todo: authority and context nodes
 }
 
 TreeViewItem? treeNth(int n, List<TreeViewItem>? list) {
