@@ -1,11 +1,12 @@
 import 'xml_web.dart';
 import 'package:xml/xml.dart' show XmlElement;
+import "render.dart";
 
 enum NodeType { classType, termType }
 
 bool _isAttr(String name) => name[0] == name[0].toLowerCase();
 
-class CurrentNode {
+class CurrentNode with Render {
   (int, int) reference;
   Map<String, bool> updates = {};
 
@@ -58,25 +59,26 @@ class CurrentNode {
 
   void mDown(String name, int idx) {} // todo
 
+  // todo: set attribute
   void mSet(String name, int idx, String tok, String val) {
     return Session().mSet(reference.$1, name, idx, tok, val);
   }
 
+  // todo: get attribute
   String mGet(String name, int idx, String tok) {
     return Session().mGet(reference.$1, name, idx, tok);
   }
 
   List<XmlElement>? mGetParagraphs(String name, int idx, String el) {
-    return null; // todo
+    return Session().mGetParagraphs(reference.$1, name, idx, el);
   }
 
-  void mSetParagraphs(
-    String name,
-    int idx,
-    String el,
-    List<XmlElement>? val,
-  ) {} // todo
+  void mSetParagraphs(String name, int idx, String el, List<XmlElement> val) {
+    return Session().mSetParagraphs(reference.$1, name, idx, el, val);
+  }
 
+  // todo
+  // these are for repeating elements within multi element e.g. TermReference in SeeReference
   int fLen(String name, int idx, String tok) {
     return 0; //todo
   }

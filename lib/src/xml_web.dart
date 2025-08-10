@@ -131,7 +131,9 @@ class Session {
   void setAttribute(int index, String name, String value) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    String? a = (value == "") ? null : value;
+    String? a = (value == "")
+        ? null
+        : value; // drop attribute if "" by setting to null
     el.setAttribute(
       name,
       a,
@@ -148,6 +150,7 @@ class Session {
     return parent.findElements("Paragraph").toList();
   }
 
+  // todo: delete empty parent??
   void setParagraphs(int index, String name, List<XmlElement> paras) {
     XmlElement? el = nodes[index];
     if (el == null) return;
@@ -200,6 +203,21 @@ class Session {
     if (el == null) return;
     // todo: Status and SeeReference
     el = el.findElements(name).elementAt(idx);
+    if (tok == "unit") {
+      XmlElement? t = el.getElement("RetentionPeriod");
+      String? a = (val == "") ? null : val;
+      if (t == null) {
+        t = XmlElement(XmlName("RetentionPeriod"), [], [], false);
+        (int, int) p = insertPos(el, "RetentionPeriod");
+        el.children.insert(p.$1, t);
+      }
+      t.setAttribute(
+        "unit",
+        a,
+        namespace: "http://www.records.nsw.gov.au/schemas/RDA",
+      );
+      return;
+    }
     XmlElement? t = el.getElement(tok);
     // delete
     if (val == "") {
@@ -222,10 +240,60 @@ class Session {
     XmlElement? el = nodes[index];
     if (el == null) return "";
     el = el.findElements(name).elementAt(idx);
-    if (tok == "") return el.innerText;
+    if (tok == "") return el.innerText; // handle simple case - e.g. LinkedTo
+    if (tok == "unit") {
+      XmlElement? t = el.getElement("RetentionPeriod");
+      if (t == null) return "";
+      String? a = t.getAttribute(
+        tok,
+        namespace: "http://www.records.nsw.gov.au/schemas/RDA",
+      );
+      return (a != null) ? a : "";
+    }
     XmlElement? t = el.getElement(tok);
     if (t == null) return "";
     return t.innerText;
+  }
+
+  List<XmlElement>? mGetParagraphs(
+    int index,
+    String name,
+    int idx,
+    String child,
+  ) {
+    XmlElement? el = nodes[index];
+    if (el == null) return null;
+    el = el.findElements(name).elementAt(idx);
+    XmlElement? parent = el.getElement(child);
+    if (parent == null) return null;
+    return parent.findElements("Paragraph").toList();
+  }
+
+  // todo: delete empty parent??
+  void mSetParagraphs(
+    int index,
+    String name,
+    int idx,
+    String child,
+    List<XmlElement> paras,
+  ) {
+    XmlElement? el = nodes[index];
+    if (el == null) return null;
+    el = el.findElements(name).elementAt(idx);
+    XmlElement? parent = el.getElement(child);
+    if (parent == null) {
+      // inserting
+      parent = XmlElement(XmlName(child), [], paras, false);
+      (int, int) p = insertPos(el, child);
+      el.children.insert(p.$1, parent);
+      return;
+    }
+    parent.children.removeWhere(
+      (para) =>
+          para.nodeType == XmlNodeType.ELEMENT &&
+          (para as XmlElement).localName == "Paragraph",
+    );
+    parent.children.insertAll(0, paras);
   }
 }
 
