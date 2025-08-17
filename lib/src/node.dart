@@ -2,12 +2,12 @@ import 'xml_web.dart';
 import 'package:xml/xml.dart' show XmlElement;
 import "render.dart";
 
-enum NodeType { classType, termType }
+enum NodeType { rootType, contextType, classType, termType }
 
 bool _isAttr(String name) => name[0] == name[0].toLowerCase();
 
 class CurrentNode with Render {
-  (int, int) reference;
+  (int, int, NodeType) reference;
   Map<String, bool> updates = {};
 
   CurrentNode(this.reference);
@@ -20,14 +20,14 @@ class CurrentNode with Render {
     updates[name] = true;
   }
 
-  String get(String name) {
+  String get(String? name) {
     if (_isAttr(name)) {
       return Session().getAttribute(reference.$1, name);
     }
     return Session().getElement(reference.$1, name);
   }
 
-  void set(String name, String value) {
+  void set(String name, String? value) {
     final changed = updates[name] ?? false;
     if (!changed) return;
     updates[name] = false;
@@ -41,35 +41,35 @@ class CurrentNode with Render {
     return Session().getParagraphs(reference.$1, name);
   }
 
-  void setParagraphs(String name, List<XmlElement> paras) {
+  void setParagraphs(String name, List<XmlElement>? paras) {
     return Session().setParagraphs(reference.$1, name, paras);
   }
 
-  int mLen(String name) {
+  int multiLen(String name) {
     return Session().mLen(reference.$1, name);
   }
 
-  int mAdd(String name, String el) {
+  int multiAdd(String name, String el) {
     return Session().mAdd(reference.$1, name, el);
   }
 
-  void mDrop(String name, int idx) {} // todo
+  void multiDrop(String name, int idx) {} // todo
 
-  void mUp(String name, int idx) {} // todo
+  void multiUp(String name, int idx) {} // todo
 
-  void mDown(String name, int idx) {} // todo
+  void multiDown(String name, int idx) {} // todo
 
   // todo: set attribute
-  void mSet(String name, int idx, String tok, String val) {
+  void multiSet(String name, int idx, String? tok, String? val) {
     return Session().mSet(reference.$1, name, idx, tok, val);
   }
 
   // todo: get attribute
-  String mGet(String name, int idx, String tok) {
+  String multiGet(String name, int idx, String? tok) {
     return Session().mGet(reference.$1, name, idx, tok);
   }
 
-  List<XmlElement>? mGetParagraphs(String name, int idx, String el) {
+  List<XmlElement>? multiGetParagraphs(String name, int idx, String el) {
     return Session().mGetParagraphs(reference.$1, name, idx, el);
   }
 

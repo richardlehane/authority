@@ -75,8 +75,8 @@ class Document {
     Session().setCurrent(sessionIndex, index);
   }
 
-  void drop(int n) {
-    Session().remove(sessionIndex, n);
+  void dropNode(int n) {
+    Session().dropNode(sessionIndex, n);
     n = (n == 0) ? 0 : n - 1;
     selectedItemIndex = n;
     refreshTree();
