@@ -3,7 +3,7 @@ import 'package:fluent_ui/fluent_ui.dart'
     show TreeViewItem, Text, FluentIcons, Icon;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'counter.dart';
-import 'node.dart' show NodeType;
+import 'node.dart' show NodeType, nodeFromString;
 
 const String _template = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -52,7 +52,7 @@ class Session {
       documents[index].toXmlString(pretty: true, indent: '\t');
 
   void setCurrent(int index, int n, NodeType nt) {
-    // todo: authority/ context nodes?
+    // todo: authority/ context nodes
     nodes[index] = nth(documents[index], n);
   }
 
@@ -66,9 +66,7 @@ class Session {
   void addChild(int index, int n, NodeType nt) {
     XmlElement? el = nth(documents[index], n);
     if (el == null) return;
-    el.children.add(
-      XmlElement(XmlName((nt == NodeType.termType) ? "Term" : "Class")),
-    );
+    el.children.add(XmlElement(XmlName(nt.toString())));
   }
 
   void addSibling(int index, int n, NodeType nt) {
@@ -76,7 +74,7 @@ class Session {
     if (el == null) return;
     el.parentElement!.children.insert(
       pos(el) + 1,
-      XmlElement(XmlName((nt == NodeType.termType) ? "Term" : "Class")),
+      XmlElement(XmlName(nt.toString())),
     );
   }
 
@@ -85,9 +83,8 @@ class Session {
   // node operations
   NodeType getType(int index) {
     XmlElement? el = nodes[index];
-    return (el != null && el.localName == "Term")
-        ? NodeType.termType
-        : NodeType.classType;
+    if (el == null) return NodeType.rootType;
+    return nodeFromString(el.localName);
   }
 
   String? getElement(int index, String name) {
