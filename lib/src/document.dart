@@ -21,18 +21,20 @@ enum View {
 
 class Document {
   String title;
-  String path;
+  String? path;
   List<TreeViewItem>? treeItems;
-  int selectedItemIndex;
   int sessionIndex;
+  int selectedItemIndex;
+  NodeType selectedType;
   View view = View.edit;
 
   Document({
     required this.title,
-    this.path = "",
+    this.path = null,
     this.treeItems,
-    this.selectedItemIndex = 0,
     this.sessionIndex = 0,
+    this.selectedItemIndex = 0,
+    this.selectedType = NodeType.rootType,
   });
 
   /// Create a new empty document model with default structure
@@ -67,12 +69,12 @@ class Document {
   }
 
   CurrentNode current() {
-    return CurrentNode((sessionIndex, selectedItemIndex));
+    return CurrentNode((sessionIndex, selectedItemIndex, selectedType));
   }
 
-  void setCurrent(int index) {
+  void setCurrent(int index, NodeType nt) {
     selectedItemIndex = index;
-    Session().setCurrent(sessionIndex, index);
+    Session().setCurrent(sessionIndex, index, nt);
   }
 
   void dropNode(int n) {

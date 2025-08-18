@@ -20,7 +20,7 @@ class CurrentNode with Render {
     updates[name] = true;
   }
 
-  String get(String? name) {
+  String? get(String name) {
     if (_isAttr(name)) {
       return Session().getAttribute(reference.$1, name);
     }
@@ -60,32 +60,43 @@ class CurrentNode with Render {
   void multiDown(String name, int idx) {} // todo
 
   // todo: set attribute
-  void multiSet(String name, int idx, String? tok, String? val) {
-    return Session().mSet(reference.$1, name, idx, tok, val);
+  void multiSet(String name, int idx, String? sub, String? val) {
+    return Session().mSet(reference.$1, name, idx, sub, val);
   }
 
   // todo: get attribute
-  String multiGet(String name, int idx, String? tok) {
-    return Session().mGet(reference.$1, name, idx, tok);
+  String? multiGet(String name, int idx, String? sub) {
+    return Session().mGet(reference.$1, name, idx, sub);
   }
 
-  List<XmlElement>? multiGetParagraphs(String name, int idx, String el) {
-    return Session().mGetParagraphs(reference.$1, name, idx, el);
+  List<XmlElement>? multiGetParagraphs(String name, int idx, String? sub) {
+    return Session().mGetParagraphs(reference.$1, name, idx, sub);
   }
 
-  void mSetParagraphs(String name, int idx, String el, List<XmlElement> val) {
-    return Session().mSetParagraphs(reference.$1, name, idx, el, val);
+  void multiSetParagraphs(
+    String name,
+    int idx,
+    String? sub,
+    List<XmlElement>? val,
+  ) {
+    return Session().mSetParagraphs(reference.$1, name, idx, sub, val);
   }
 
   // todo
   // these are for repeating elements within multi element e.g. TermReference in SeeReference
-  int fLen(String name, int idx, String tok) {
+  int fieldsLen(String name, int idx, String sub) {
     return 0; //todo
   }
 
-  String fGet(String name, int idx, String tok, int fidx) {
+  String? fieldsGet(String name, int idx, String? sub, int fidx) {
     return ""; // todo
   }
 
-  void fSet(String name, int idx, String tok, int fidx, String val) {} //todo
+  void fieldsSet(
+    String name,
+    int idx,
+    String? sub,
+    int fidx,
+    String? val,
+  ) {} //todo
 }

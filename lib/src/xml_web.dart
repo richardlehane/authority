@@ -51,13 +51,13 @@ class Session {
   String asString(int index) =>
       documents[index].toXmlString(pretty: true, indent: '\t');
 
-  void setCurrent(int index, int n) {
+  void setCurrent(int index, int n, NodeType nt) {
     // todo: authority/ context nodes?
     nodes[index] = nth(documents[index], n);
   }
 
   // tree operations
-  void remove(int index, int n) {
+  void dropNode(int index, int n) {
     XmlElement? el = nth(documents[index], n);
     if (el == null) return;
     el.remove();
@@ -90,29 +90,29 @@ class Session {
         : NodeType.classType;
   }
 
-  String getElement(int index, String name) {
+  String? getElement(int index, String name) {
     XmlElement? el = nodes[index];
-    if (el == null) return "";
+    if (el == null) return null;
     XmlElement? t = el.getElement(name);
-    return (t != null) ? t.innerText : "";
+    return (t != null) ? t.innerText : null;
   }
 
-  String getAttribute(int index, String name) {
+  String? getAttribute(int index, String name) {
     XmlElement? el = nodes[index];
-    if (el == null) return "";
+    if (el == null) return null;
     String? a = el.getAttribute(
       name,
       namespace: "http://www.records.nsw.gov.au/schemas/RDA",
     );
-    return (a != null) ? a : "";
+    return (a != null) ? a : null;
   }
 
-  void setElement(int index, String name, String value) {
+  void setElement(int index, String name, String? value) {
     XmlElement? el = nodes[index];
     if (el == null) return;
     XmlElement? t = el.getElement(name);
     // delete
-    if (value == "") {
+    if (value == null) {
       if (t != null) el.children.remove(t);
       return;
     }
@@ -128,15 +128,12 @@ class Session {
     return;
   }
 
-  void setAttribute(int index, String name, String value) {
+  void setAttribute(int index, String name, String? value) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    String? a = (value == "")
-        ? null
-        : value; // drop attribute if "" by setting to null
     el.setAttribute(
       name,
-      a,
+      value,
       namespace: "http://www.records.nsw.gov.au/schemas/RDA",
     );
     return;
@@ -151,11 +148,12 @@ class Session {
   }
 
   // todo: delete empty parent??
-  void setParagraphs(int index, String name, List<XmlElement> paras) {
+  void setParagraphs(int index, String name, List<XmlElement>? paras) {
     XmlElement? el = nodes[index];
     if (el == null) return;
     XmlElement? parent = el.getElement(name);
     if (parent == null) {
+      if (paras == null) return;
       // inserting
       parent = XmlElement(XmlName(name), [], paras, false);
       (int, int) p = insertPos(el, name);
@@ -167,6 +165,10 @@ class Session {
           para.nodeType == XmlNodeType.ELEMENT &&
           (para as XmlElement).localName == "Paragraph",
     );
+    if (paras == null) {
+      // todo: check if parent is empty now, if so remove it too
+      return;
+    }
     parent.children.insertAll(0, paras);
   }
 

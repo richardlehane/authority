@@ -4,20 +4,20 @@ import 'package:xml/xml.dart'
     show XmlElement, XmlNode, XmlNodeType, XmlStringExtension;
 
 mixin Render {
-  String mGet(String name, int idx, String tok);
-  List<XmlElement>? mGetParagraphs(String name, int idx, String el);
+  String? multiGet(String name, int idx, String? sub);
+  List<XmlElement>? multiGetParagraphs(String name, int idx, String sub);
 
   (List<TextSpan>, List<TextSpan>) disposal(int index) {
     List<TextSpan> action = [];
     List<TextSpan> custody = [];
 
-    String condition = mGet("Disposal", index, "DisposalCondition");
-    String retentionPeriod = mGet("Disposal", index, "RetentionPeriod");
-    String retentionUnit = mGet("Disposal", index, "unit");
-    String trigger = mGet("Disposal", index, "DisposalTrigger");
-    String disposalAction = mGet("Disposal", index, "DisposalAction");
-    String transferTo = mGet("Disposal", index, "TransferTo");
-    if (transferTo.isNotEmpty) transferTo = " to ${transferTo}";
+    String? condition = multiGet("Disposal", index, "DisposalCondition");
+    String? retentionPeriod = multiGet("Disposal", index, "RetentionPeriod");
+    String? retentionUnit = multiGet("Disposal", index, "unit");
+    String? trigger = multiGet("Disposal", index, "DisposalTrigger");
+    String? disposalAction = multiGet("Disposal", index, "DisposalAction");
+    String? transferTo = multiGet("Disposal", index, "TransferTo");
+    if (transferTo != null) transferTo = " to ${transferTo}";
     List<XmlElement>? customCustody = mGetParagraphs(
       "Disposal",
       index,
