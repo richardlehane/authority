@@ -3,8 +3,7 @@ XML editing API for authorityeditor
 
 ## Todos
 
-- tidy API
-- String? returns
+- API: async
 - Multi: remaining edits
 - Drop node and children
 - Move up/ Move down

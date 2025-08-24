@@ -1,6 +1,6 @@
 import 'package:xml/xml.dart';
 import 'package:fluent_ui/fluent_ui.dart'
-    show TreeViewItem, Text, FluentIcons, Icon;
+    show TreeViewItem, Text, FluentIcons, Icon, TextSpan, TextStyle, FontWeight;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'counter.dart';
 import 'node.dart' show NodeType, nodeFromString;
@@ -16,9 +16,11 @@ const String _template = '''
 </Authority>
 ''';
 
+const String _ns = "http://www.records.nsw.gov.au/schemas/RDA";
+
 class Session {
   List<XmlDocument> documents = [];
-  List<XmlElement?> nodes = []; // nodes are only term/class nodes
+  List<XmlElement?> nodes = [];
 
   // singleton
   Session._();
@@ -27,7 +29,7 @@ class Session {
 
   int _init(XmlDocument doc) {
     documents.add(doc);
-    nodes.add(nth(doc, 0));
+    nodes.add(nth(doc, 0, NodeType.termType));
     return documents.length - 1;
   }
 
@@ -45,32 +47,67 @@ class Session {
     return _init(doc);
   }
 
-  List<TreeViewItem> tree(int index, Counter ctr) =>
-      addChildren(termsClasses(documents[index].rootElement), ctr);
+  List<TreeViewItem> tree(int index, Counter ctr) {
+    ctr.next(NodeType.rootType);
+    List<TreeViewItem> ret = [
+      TreeViewItem(
+        leading: Icon(FluentIcons.home),
+        content: Text.rich(
+          TextSpan(
+            style: TextStyle(fontWeight: FontWeight.bold),
+            text: "Details",
+          ),
+        ),
+        value: (NodeType.rootType, 0),
+        selected: ctr.isSelected(),
+      ),
+      TreeViewItem(
+        content: Text.rich(
+          TextSpan(
+            style: TextStyle(fontWeight: FontWeight.bold),
+            text: "Context",
+          ),
+        ),
+        children: addContext(documents[index].rootElement, ctr),
+        selected: false,
+      ),
+      TreeViewItem(
+        content: Text.rich(
+          TextSpan(
+            style: TextStyle(fontWeight: FontWeight.bold),
+            text: "Authority",
+          ),
+        ),
+        selected: false,
+      ),
+    ];
+    ret.addAll(addChildren(termsClasses(documents[index].rootElement), ctr));
+    return ret;
+  }
 
   String asString(int index) =>
       documents[index].toXmlString(pretty: true, indent: '\t');
 
   void setCurrent(int index, int n, NodeType nt) {
     // todo: authority/ context nodes
-    nodes[index] = nth(documents[index], n);
+    nodes[index] = nth(documents[index], n, nt);
   }
 
   // tree operations
-  void dropNode(int index, int n) {
-    XmlElement? el = nth(documents[index], n);
+  void dropNode(int index, int n, NodeType nt) {
+    XmlElement? el = nth(documents[index], n, nt);
     if (el == null) return;
     el.remove();
   }
 
   void addChild(int index, int n, NodeType nt) {
-    XmlElement? el = nth(documents[index], n);
+    XmlElement? el = nth(documents[index], n, nt);
     if (el == null) return;
     el.children.add(XmlElement(XmlName(nt.toString())));
   }
 
   void addSibling(int index, int n, NodeType nt) {
-    XmlElement? el = nth(documents[index], n);
+    XmlElement? el = nth(documents[index], n, nt);
     if (el == null) return;
     el.parentElement!.children.insert(
       pos(el) + 1,
@@ -97,10 +134,7 @@ class Session {
   String? getAttribute(int index, String name) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    String? a = el.getAttribute(
-      name,
-      namespace: "http://www.records.nsw.gov.au/schemas/RDA",
-    );
+    String? a = el.getAttribute(name, namespace: _ns);
     return (a != null) ? a : null;
   }
 
@@ -128,11 +162,7 @@ class Session {
   void setAttribute(int index, String name, String? value) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    el.setAttribute(
-      name,
-      value,
-      namespace: "http://www.records.nsw.gov.au/schemas/RDA",
-    );
+    el.setAttribute(name, value, namespace: _ns);
     return;
   }
 
@@ -170,7 +200,7 @@ class Session {
   }
 
   // multi operations
-  int mLen(int index, String name) {
+  int multiLen(int index, String name) {
     XmlElement? el = nodes[index];
     if (el == null) return 0;
     if (name == "Status") {
@@ -187,22 +217,22 @@ class Session {
     return el.findElements(name).length;
   }
 
-  int mAdd(int index, String name, String el) {
+  int multiAdd(int index, String name, String? sub) {
     XmlElement? el = nodes[index];
     if (el == null) return 0;
-    // todo: special case Status and SeeReference - SeeReference uses the el parameter
+    // todo: special case Status and SeeReference - SeeReference uses the sub parameter
     XmlElement t = XmlElement(XmlName(name), [], [], false);
     (int, int) p = insertPos(el, name);
     el.children.insert(p.$1, t);
     return p.$2; // todo
   }
 
-  void mSet(int index, String name, int idx, String tok, String val) {
+  void multiSet(int index, String name, int idx, String? sub, String? val) {
     XmlElement? el = nodes[index];
     if (el == null) return;
     // todo: Status and SeeReference
     el = el.findElements(name).elementAt(idx);
-    if (tok == "unit") {
+    if (sub == "unit") {
       XmlElement? t = el.getElement("RetentionPeriod");
       String? a = (val == "") ? null : val;
       if (t == null) {
@@ -210,90 +240,113 @@ class Session {
         (int, int) p = insertPos(el, "RetentionPeriod");
         el.children.insert(p.$1, t);
       }
-      t.setAttribute(
-        "unit",
-        a,
-        namespace: "http://www.records.nsw.gov.au/schemas/RDA",
-      );
+      t.setAttribute("unit", a, namespace: _ns);
       return;
     }
-    XmlElement? t = el.getElement(tok);
-    // delete
-    if (val == "") {
-      if (t != null) el.children.remove(t);
+    if (sub != null) {
+      XmlElement? t = el.getElement(sub);
+      // delete
+      if (val == null) {
+        if (t != null) el.children.remove(t);
+        return;
+      }
+      // update
+      if (t != null) {
+        t.innerText = val;
+        return;
+      }
+      // insert
+      t = XmlElement(XmlName(sub), [], [XmlText(val)], false);
+      (int, int) p = insertPos(el, sub);
+      el.children.insert(p.$1, t);
       return;
     }
-    // update
-    if (t != null) {
-      t.innerText = val;
-      return;
-    }
-    // insert
-    t = XmlElement(XmlName(tok), [], [XmlText(val)], false);
-    (int, int) p = insertPos(el, tok);
-    el.children.insert(p.$1, t);
+    if (val == null) return; // can't drop multi with null value
+    el.innerText = val;
     return;
   }
 
-  String mGet(int index, String name, int idx, String tok) {
+  String? multiGet(int index, String name, int idx, String? sub) {
     XmlElement? el = nodes[index];
-    if (el == null) return "";
+    if (el == null) return null;
     el = el.findElements(name).elementAt(idx);
-    if (tok == "") return el.innerText; // handle simple case - e.g. LinkedTo
-    if (tok == "unit") {
+    if (sub == null) return el.innerText; // handle simple case - e.g. LinkedTo
+    if (sub == "unit") {
       XmlElement? t = el.getElement("RetentionPeriod");
-      if (t == null) return "";
-      String? a = t.getAttribute(
-        tok,
-        namespace: "http://www.records.nsw.gov.au/schemas/RDA",
-      );
-      return (a != null) ? a : "";
+      if (t == null) return null;
+      String? a = t.getAttribute(sub, namespace: _ns);
+      return (a != null) ? a : null;
     }
-    XmlElement? t = el.getElement(tok);
-    if (t == null) return "";
-    return t.innerText;
+    XmlElement? t = el.getElement(sub);
+    if (t == null) return null;
+    return t.innerText.isEmpty ? null : t.innerText;
   }
 
-  List<XmlElement>? mGetParagraphs(
+  List<XmlElement>? multiGetParagraphs(
     int index,
     String name,
     int idx,
-    String child,
+    String? sub,
   ) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
     el = el.findElements(name).elementAt(idx);
-    XmlElement? parent = el.getElement(child);
-    if (parent == null) return null;
-    return parent.findElements("Paragraph").toList();
+    if (sub != null) {
+      el = el.getElement(sub);
+      if (el == null) return null;
+    }
+    List<XmlElement> l = el.findElements("Paragraph").toList();
+    return l.isEmpty ? null : l;
   }
 
   // todo: delete empty parent??
-  void mSetParagraphs(
+  void multiSetParagraphs(
     int index,
     String name,
     int idx,
-    String child,
-    List<XmlElement> paras,
+    String? sub,
+    List<XmlElement>? val,
   ) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
     el = el.findElements(name).elementAt(idx);
-    XmlElement? parent = el.getElement(child);
-    if (parent == null) {
+    XmlElement parent = el;
+    if (sub != null) {
+      el = el.getElement(sub);
+    }
+    if (el == null) {
+      if (val == null) return;
       // inserting
-      parent = XmlElement(XmlName(child), [], paras, false);
-      (int, int) p = insertPos(el, child);
-      el.children.insert(p.$1, parent);
+      el = XmlElement(XmlName(sub!), [], val, false);
+      (int, int) p = insertPos(parent, sub);
+      parent.children.insert(p.$1, el);
       return;
     }
-    parent.children.removeWhere(
+    el.children.removeWhere(
       (para) =>
           para.nodeType == XmlNodeType.ELEMENT &&
           (para as XmlElement).localName == "Paragraph",
     );
-    parent.children.insertAll(0, paras);
+    // delete
+    if (val == null) {
+      if (el.children.isEmpty) el.remove();
+      return;
+    }
+    el.children.insertAll(0, val); // update
   }
+}
+
+List<TreeViewItem> addContext(XmlElement root, Counter ctr) {
+  return root.findElements("Context").map((item) {
+    final int index = ctr.next(NodeType.contextType);
+    final bool selected = ctr.isSelected();
+    return TreeViewItem(
+      leading: Icon(FluentIcons.page_list),
+      content: Text((item.getElement("ContextTitle")?.innerText ?? "")),
+      value: (NodeType.contextType, index),
+      selected: selected,
+    );
+  }).toList();
 }
 
 List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
@@ -301,7 +354,7 @@ List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
     final NodeType nt = (item.name.local == 'Term')
         ? NodeType.termType
         : NodeType.classType;
-    final int index = ctr.next();
+    final int index = ctr.next(nt);
     final bool selected = ctr.isSelected();
     return TreeViewItem(
       leading: (nt == NodeType.termType)
@@ -338,7 +391,24 @@ String title(XmlElement el) {
       : '';
 }
 
-XmlElement? nth(XmlDocument? doc, int n) {
+XmlElement? nth(XmlDocument? doc, int n, NodeType nt) {
+  switch (nt) {
+    case NodeType.none:
+      return null;
+    case NodeType.rootType:
+      return doc?.rootElement;
+    case NodeType.contextType:
+      return nthContext(doc, n);
+    default:
+      return nthTermClass(doc, n);
+  }
+}
+
+XmlElement? nthContext(XmlDocument? doc, int n) {
+  return doc?.rootElement.findElements("Context").elementAt(n);
+}
+
+XmlElement? nthTermClass(XmlDocument? doc, int n) {
   int idx = -1;
   XmlElement? descend(XmlElement el) {
     for (XmlElement child in el.childElements.where(

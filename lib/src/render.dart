@@ -18,29 +18,32 @@ mixin Render {
     String? disposalAction = multiGet("Disposal", index, "DisposalAction");
     String? transferTo = multiGet("Disposal", index, "TransferTo");
     if (transferTo != null) transferTo = " to ${transferTo}";
-    List<XmlElement>? customCustody = mGetParagraphs(
+    List<XmlElement>? customCustody = multiGetParagraphs(
       "Disposal",
       index,
       "CustomCustody",
     );
-    List<XmlElement>? customAction = mGetParagraphs(
+    List<XmlElement>? customAction = multiGetParagraphs(
       "Disposal",
       index,
       "CustomAction",
     );
 
-    String retention(String period, String unit, String trigger) {
-      if (period.isEmpty && trigger.isEmpty) return "";
-      if (period.isEmpty) return "until ${trigger}";
+    String retention(String? period, String? unit, String? trigger) {
+      if (period == null && trigger == null) return "";
+      if (period == null) return "until ${trigger}";
+      if (unit == null) unit = "years"; // should not reach
       String ret = (unit == "1")
           ? "${period} ${unit.substring(0, unit.length - 1)}"
           : "${period} ${unit}";
-      if (trigger.isEmpty) return "minimum of ${ret}";
+      if (trigger == null) return "minimum of ${ret}";
       return "minimum of ${ret} after ${trigger}";
     }
 
     String ret = retention(retentionPeriod, retentionUnit, trigger);
     switch (disposalAction) {
+      case null:
+        break;
       case "Required as State archives":
         action.add(_toSpan(0, disposalAction));
         if (ret.isNotEmpty)
@@ -69,7 +72,7 @@ mixin Render {
       if (custody.isNotEmpty) custody.add(_toSpan(0, "\n"));
       custody.addAll(renderParas(customCustody));
     }
-    if (condition.isNotEmpty) {
+    if (condition != null) {
       action.insert(0, _toSpan(1, "${condition}:\n"));
       if (custody.isNotEmpty) custody.insert(0, _toSpan(1, "${condition}:\n"));
     }

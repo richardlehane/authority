@@ -16,8 +16,16 @@
       ]
     },
     {
+      "name": "math_expressions",
+      "version": "3.1.0",
+      "dependencies": [
+        "petitparser",
+        "vector_math"
+      ]
+    },
+    {
       "name": "test",
-      "version": "1.26.2",
+      "version": "1.26.3",
       "dependencies": [
         "analyzer",
         "async",
@@ -49,9 +57,10 @@
     },
     {
       "name": "file_picker",
-      "version": "10.2.0",
+      "version": "10.3.2",
       "dependencies": [
         "cross_file",
+        "dbus",
         "ffi",
         "flutter",
         "flutter_plugin_android_lifecycle",
@@ -76,11 +85,24 @@
     },
     {
       "name": "xml",
-      "version": "6.5.0",
+      "version": "6.6.1",
       "dependencies": [
         "collection",
         "meta",
         "petitparser"
+      ]
+    },
+    {
+      "name": "vector_math",
+      "version": "2.2.0",
+      "dependencies": []
+    },
+    {
+      "name": "petitparser",
+      "version": "7.0.1",
+      "dependencies": [
+        "collection",
+        "meta"
       ]
     },
     {
@@ -119,7 +141,7 @@
     },
     {
       "name": "test_core",
-      "version": "0.6.11",
+      "version": "0.6.12",
       "dependencies": [
         "analyzer",
         "args",
@@ -146,7 +168,7 @@
     },
     {
       "name": "test_api",
-      "version": "0.7.6",
+      "version": "0.7.7",
       "dependencies": [
         "async",
         "boolean_selector",
@@ -320,7 +342,7 @@
     },
     {
       "name": "analyzer",
-      "version": "7.7.0",
+      "version": "8.1.1",
       "dependencies": [
         "_fe_analyzer_shared",
         "collection",
@@ -334,6 +356,16 @@
         "source_span",
         "watcher",
         "yaml"
+      ]
+    },
+    {
+      "name": "dbus",
+      "version": "0.7.11",
+      "dependencies": [
+        "args",
+        "ffi",
+        "meta",
+        "xml"
       ]
     },
     {
@@ -370,7 +402,7 @@
     },
     {
       "name": "flutter_plugin_android_lifecycle",
-      "version": "2.0.28",
+      "version": "2.0.29",
       "dependencies": [
         "flutter"
       ]
@@ -379,12 +411,7 @@
       "name": "flutter_web_plugins",
       "version": "0.0.0",
       "dependencies": [
-        "characters",
-        "collection",
-        "flutter",
-        "material_color_utilities",
-        "meta",
-        "vector_math"
+        "flutter"
       ]
     },
     {
@@ -396,14 +423,6 @@
         "material_color_utilities",
         "meta",
         "sky_engine",
-        "vector_math"
-      ]
-    },
-    {
-      "name": "math_expressions",
-      "version": "2.7.0",
-      "dependencies": [
-        "petitparser",
         "vector_math"
       ]
     },
@@ -432,23 +451,9 @@
       "name": "flutter_localizations",
       "version": "0.0.0",
       "dependencies": [
-        "characters",
-        "clock",
-        "collection",
         "flutter",
         "intl",
-        "material_color_utilities",
-        "meta",
-        "path",
-        "vector_math"
-      ]
-    },
-    {
-      "name": "petitparser",
-      "version": "6.1.0",
-      "dependencies": [
-        "collection",
-        "meta"
+        "path"
       ]
     },
     {
@@ -579,14 +584,14 @@
     },
     {
       "name": "_fe_analyzer_shared",
-      "version": "85.0.0",
+      "version": "88.0.0",
       "dependencies": [
         "meta"
       ]
     },
     {
-      "name": "vector_math",
-      "version": "2.1.4",
+      "name": "sky_engine",
+      "version": "0.0.0",
       "dependencies": []
     },
     {
@@ -599,11 +604,6 @@
     {
       "name": "characters",
       "version": "1.4.0",
-      "dependencies": []
-    },
-    {
-      "name": "sky_engine",
-      "version": "0.0.0",
       "dependencies": []
     },
     {

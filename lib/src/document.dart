@@ -43,7 +43,7 @@ class Document {
     final sessionIndex = sess.empty();
     return Document(
       title: title,
-      treeItems: sess.tree(sessionIndex, Counter(0)),
+      treeItems: sess.tree(sessionIndex, Counter(0, NodeType.termType)),
       sessionIndex: sessionIndex,
     );
   }
@@ -54,7 +54,7 @@ class Document {
     return Document(
       title: f.name,
       // path: f.path, ???
-      treeItems: sess.tree(sessionIndex, Counter(0)),
+      treeItems: sess.tree(sessionIndex, Counter(0, NodeType.termType)),
       sessionIndex: sessionIndex,
     );
   }
@@ -65,7 +65,10 @@ class Document {
   }
 
   void refreshTree() {
-    treeItems = Session().tree(sessionIndex, Counter(selectedItemIndex));
+    treeItems = Session().tree(
+      sessionIndex,
+      Counter(selectedItemIndex, selectedType),
+    );
   }
 
   CurrentNode current() {
@@ -77,8 +80,8 @@ class Document {
     Session().setCurrent(sessionIndex, index, nt);
   }
 
-  void dropNode(int n) {
-    Session().dropNode(sessionIndex, n);
+  void dropNode(int n, NodeType nt) {
+    Session().dropNode(sessionIndex, n, nt);
     n = (n == 0) ? 0 : n - 1;
     selectedItemIndex = n;
     refreshTree();

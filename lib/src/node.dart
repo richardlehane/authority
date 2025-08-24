@@ -6,7 +6,8 @@ enum NodeType {
   rootType,
   contextType,
   classType,
-  termType;
+  termType,
+  none;
 
   @override
   String toString() {
@@ -19,6 +20,18 @@ enum NodeType {
         return "Class";
       case NodeType.termType:
         return "Term";
+      case NodeType.none:
+        return "None";
+    }
+  }
+
+  bool termOrClass() {
+    switch (this) {
+      case NodeType.termType:
+      case NodeType.classType:
+        return true;
+      default:
+        return false;
     }
   }
 }
@@ -82,8 +95,8 @@ class CurrentNode with Render {
     return Session().multiLen(reference.$1, name);
   }
 
-  int multiAdd(String name, String el) {
-    return Session().multiAdd(reference.$1, name, el);
+  int multiAdd(String name, String? sub) {
+    return Session().multiAdd(reference.$1, name, sub);
   }
 
   void multiDrop(String name, int idx) {} // todo
