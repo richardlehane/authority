@@ -68,16 +68,19 @@ class Session {
           ),
         ),
         children: addContext(documents[index].rootElement, ctr),
+        value: (NodeType.none, 0),
         selected: false,
       ),
       TreeViewItem(
         content: Text.rich(
           TextSpan(
             style: TextStyle(fontWeight: FontWeight.bold),
+
             text: "Authority",
           ),
         ),
         selected: false,
+        value: (NodeType.none, 1),
       ),
     ];
     ret.addAll(addChildren(termsClasses(documents[index].rootElement), ctr));
