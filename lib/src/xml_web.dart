@@ -51,7 +51,6 @@ class Session {
     ctr.next(NodeType.rootType);
     List<TreeViewItem> ret = [
       TreeViewItem(
-        leading: Icon(FluentIcons.home),
         content: Text.rich(
           TextSpan(
             style: TextStyle(fontWeight: FontWeight.bold),
