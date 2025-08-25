@@ -25,13 +25,14 @@ enum NodeType {
     }
   }
 
-  bool termOrClass() {
+  bool like(NodeType nt) {
     switch (this) {
       case NodeType.termType:
       case NodeType.classType:
-        return true;
-      default:
+        if (nt == NodeType.termType || nt == NodeType.classType) return true;
         return false;
+      default:
+        return nt == this;
     }
   }
 }

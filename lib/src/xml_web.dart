@@ -57,12 +57,12 @@ class Session {
       ),
       TreeViewItem(
         content: Text("Context"),
-        children: addContext(documents[index].rootElement, ctr),
+        children: _addContext(documents[index].rootElement, ctr),
         value: (NodeType.none, 0),
         selected: false,
       ),
     ];
-    ret.addAll(addChildren(termsClasses(documents[index].rootElement), ctr));
+    ret.addAll(_addChildren(termsClasses(documents[index].rootElement), ctr));
     return ret;
   }
 
@@ -81,6 +81,13 @@ class Session {
     el.remove();
   }
 
+  void addContext(int index) {
+    XmlElement root = documents[index].rootElement;
+    (int, int) p = insertPos(root, "Context");
+    root.children.insert(p.$1, XmlElement(XmlName("Context")));
+    return;
+  }
+
   void addChild(int index, int n, NodeType nt) {
     XmlElement? el = nth(documents[index], n, nt);
     if (el == null) return;
@@ -91,9 +98,19 @@ class Session {
     XmlElement? el = nth(documents[index], n, nt);
     if (el == null) return;
     el.parentElement!.children.insert(
-      pos(el) + 1,
+      _pos(el) + 1,
       XmlElement(XmlName(nt.toString())),
     );
+  }
+
+  // find the index of the sibling node within its parent by counting previous siblings
+  int _pos(XmlNode el) {
+    int ret = 0;
+    while (el.previousSibling != null) {
+      ret++;
+      el = el.previousSibling!;
+    }
+    return ret;
   }
 
   // todo: move up/ move down
@@ -317,7 +334,7 @@ class Session {
   }
 }
 
-List<TreeViewItem> addContext(XmlElement root, Counter ctr) {
+List<TreeViewItem> _addContext(XmlElement root, Counter ctr) {
   return root.findElements("Context").map((item) {
     final int index = ctr.next(NodeType.contextType);
     final bool selected = ctr.isSelected();
@@ -330,7 +347,7 @@ List<TreeViewItem> addContext(XmlElement root, Counter ctr) {
   }).toList();
 }
 
-List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
+List<TreeViewItem> _addChildren(List<XmlElement> list, Counter ctr) {
   return list.map((item) {
     final NodeType nt = (item.name.local == 'Term')
         ? NodeType.termType
@@ -343,7 +360,7 @@ List<TreeViewItem> addChildren(List<XmlElement> list, Counter ctr) {
           : Icon(FluentIcons.page),
       content: Text(title(item)),
       value: (nt, index),
-      children: addChildren(termsClasses(item), ctr),
+      children: _addChildren(termsClasses(item), ctr),
       selected: selected,
     );
   }).toList();
@@ -415,16 +432,21 @@ XmlElement? nthTermClass(XmlDocument? doc, int n) {
   return descend(doc.rootElement);
 }
 
-int pos(XmlNode el) {
-  int ret = 0;
-  while (el.previousSibling != null) {
-    ret++;
-    el = el.previousSibling!;
-  }
-  return ret;
-}
-
 // Constants to maintain element order
+// after contexts, Term or Class elements can be nested
+const authorityElements = [
+  "ID",
+  "AuthorityTitle",
+  "Scope",
+  "DateRange",
+  "Status",
+  "LinkedTo",
+  "Comment",
+  "Context",
+];
+
+const contextElements = ["ContextTitle", "ContextContent", "Comment"];
+
 // Also, after Comments Term or Class elements can be nested
 const termElements = [
   "ID",
@@ -436,6 +458,7 @@ const termElements = [
   "Comment", // multiple
 ];
 
+// Also, after Comments Term or Class elements can be nested
 const classElements = [
   "ID",
   "ClassTitle",
@@ -463,6 +486,8 @@ const disposalElements = [
   int pos = 0;
   int multi = 0;
   List<String> prev = switch (el.localName) {
+    "Authority" => authorityElements,
+    "Context" => contextElements,
     "Term" => termElements,
     "Class" => classElements,
     "Disposal" => disposalElements,

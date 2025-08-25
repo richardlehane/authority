@@ -9,7 +9,7 @@ class Counter {
   Counter(this.selected, this.selectedNt);
 
   int next(NodeType nt) {
-    if (!thisNt.termOrClass() && thisNt != nt) count = -1;
+    if (!thisNt.like(nt)) count = -1;
     thisNt = nt;
     count++;
     return count;

@@ -87,12 +87,26 @@ class Document {
     refreshTree();
   }
 
+  void addContext([int? n]) {
+    if (n == null) {
+      Session().addContext(sessionIndex);
+      selectedItemIndex =
+          treeItems![1].children.length - 1; // live dangerously!
+    } else {
+      Session().addSibling(sessionIndex, n, NodeType.contextType);
+      selectedItemIndex = n + 1;
+      selectedType = NodeType.contextType;
+    }
+    refreshTree();
+  }
+
   void addChild(int n, NodeType nt) {
     Session().addChild(sessionIndex, n, nt);
     // update selectedItemIndex by walking the treemenu
-    final TreeViewItem? it = treeNth(n, treeItems);
+    final TreeViewItem? it = treeNth(n, nt, treeItems);
     if (it != null) {
       selectedItemIndex = n + treeDescendants(it) + 1;
+      selectedType = nt;
     }
     refreshTree();
   }
@@ -100,9 +114,10 @@ class Document {
   void addSibling(int n, NodeType nt) {
     Session().addSibling(sessionIndex, n, nt);
     // update selectedItemIndex by walking the treemenu
-    final TreeViewItem? it = treeNth(n, treeItems);
+    final TreeViewItem? it = treeNth(n, nt, treeItems);
     if (it != null) {
       selectedItemIndex = n + treeDescendants(it) + 1;
+      selectedType = nt;
     }
     refreshTree();
   }
@@ -111,18 +126,19 @@ class Document {
   // todo: authority and context nodes
 }
 
-TreeViewItem? treeNth(int n, List<TreeViewItem>? list) {
+TreeViewItem? treeNth(int n, NodeType nt, List<TreeViewItem>? list) {
   if (list == null) {
     return null;
   }
   TreeViewItem? prev;
   for (final element in list) {
+    if (!nt.like(element.value.$1)) continue;
     if (element.value.$2 == n) {
       return element;
     }
     if (element.value.$2 > n) {
       if (prev != null) {
-        final TreeViewItem? el = treeNth(n, prev.children);
+        final TreeViewItem? el = treeNth(n, nt, prev.children);
         if (el != null) {
           return el;
         }
