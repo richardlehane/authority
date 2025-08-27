@@ -75,9 +75,9 @@ class CurrentNode with Render {
   }
 
   void set(String name, String? value) {
-    final changed = updates[name] ?? false;
-    if (!changed) return;
-    updates[name] = false;
+    // final changed = updates[name] ?? false;
+    // if (!changed) return;
+    // updates[name] = false;
     if (_isAttr(name)) {
       return Session().setAttribute(reference.$1, name, value);
     }
