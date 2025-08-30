@@ -1,9 +1,10 @@
 import 'package:xml/xml.dart';
 import 'package:fluent_ui/fluent_ui.dart'
-    show TreeViewItem, Text, FluentIcons, Icon, TextSpan, TextStyle, FontWeight;
+    show TreeViewItem, Text, FluentIcons, Icon;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'counter.dart';
 import 'node.dart' show NodeType, nodeFromString;
+import 'tree.dart' show makeItem;
 
 const String _template = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -50,16 +51,14 @@ class Session {
   List<TreeViewItem> tree(int index, Counter ctr) {
     ctr.next(NodeType.rootType);
     List<TreeViewItem> ret = [
-      TreeViewItem(
-        content: Text("Details"),
-        value: (NodeType.rootType, 0),
-        selected: ctr.isSelected(),
-      ),
-      TreeViewItem(
-        content: Text("Context"),
-        children: _addContext(documents[index].rootElement, ctr),
-        value: (NodeType.none, 0),
-        selected: false,
+      makeItem(0, NodeType.rootType, ctr.isSelected(), null, "Details", []),
+      makeItem(
+        0,
+        NodeType.none,
+        false,
+        null,
+        "Context",
+        _addContext(documents[index].rootElement, ctr),
       ),
     ];
     ret.addAll(_addChildren(termsClasses(documents[index].rootElement), ctr));
@@ -101,6 +100,24 @@ class Session {
       _pos(el) + 1,
       XmlElement(XmlName(nt.toString())),
     );
+  }
+
+  void moveUp(int index, int n, NodeType nt) {
+    XmlElement? el = nth(documents[index], n, nt);
+    if (el == null) return;
+    XmlElement? prev = el.previousElementSibling;
+    if (prev == null || !nt.like(nodeFromString(prev.localName))) return;
+    el.remove();
+    prev.parentElement!.children.insert(_pos(prev), el);
+  }
+
+  void moveDown(int index, int n, NodeType nt) {
+    XmlElement? el = nth(documents[index], n, nt);
+    if (el == null) return;
+    XmlElement? next = el.nextElementSibling;
+    if (next == null || !nt.like(nodeFromString(next.localName))) return;
+    el.remove();
+    next.parentElement!.children.insert(_pos(next) + 1, el);
   }
 
   // find the index of the sibling node within its parent by counting previous siblings
@@ -338,11 +355,13 @@ List<TreeViewItem> _addContext(XmlElement root, Counter ctr) {
   return root.findElements("Context").map((item) {
     final int index = ctr.next(NodeType.contextType);
     final bool selected = ctr.isSelected();
-    return TreeViewItem(
-      leading: Icon(FluentIcons.page_list),
-      content: Text((item.getElement("ContextTitle")?.innerText ?? "")),
-      value: (NodeType.contextType, index),
-      selected: selected,
+    return makeItem(
+      index,
+      NodeType.contextType,
+      selected,
+      null,
+      item.getElement("ContextTitle")?.innerText,
+      [],
     );
   }).toList();
 }
@@ -354,14 +373,15 @@ List<TreeViewItem> _addChildren(List<XmlElement> list, Counter ctr) {
         : NodeType.classType;
     final int index = ctr.next(nt);
     final bool selected = ctr.isSelected();
-    return TreeViewItem(
-      leading: (nt == NodeType.termType)
-          ? Icon(FluentIcons.fabric_folder)
-          : Icon(FluentIcons.page),
-      content: Text(title(item)),
-      value: (nt, index),
-      children: _addChildren(termsClasses(item), ctr),
-      selected: selected,
+    return makeItem(
+      index,
+      nt,
+      selected,
+      item.getAttribute("itemno"),
+      nt == NodeType.termType
+          ? item.getAttribute('TermTitle')
+          : item.getElement('ClassTitle')?.innerText,
+      _addChildren(termsClasses(item), ctr),
     );
   }).toList();
 }
@@ -373,20 +393,6 @@ List<XmlElement> termsClasses(XmlElement el) {
   return el.childElements
       .where((e) => e.name.local == 'Term' || e.name.local == 'Class')
       .toList();
-}
-
-String title(XmlElement el) {
-  String? itemno = el.getAttribute("itemno");
-  XmlElement? t = (el.name.local == 'Class')
-      ? el.getElement('ClassTitle')
-      : el.getElement('TermTitle');
-  return (itemno != null)
-      ? (t != null)
-            ? "$itemno ${t.innerText}"
-            : itemno
-      : (t != null)
-      ? t.innerText
-      : '';
 }
 
 XmlElement? nth(XmlDocument? doc, int n, NodeType nt) {

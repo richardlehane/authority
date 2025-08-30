@@ -55,16 +55,10 @@ bool _isAttr(String name) => name[0] == name[0].toLowerCase();
 
 class CurrentNode with Render {
   (int, int, NodeType) reference;
-  Map<String, bool> updates = {};
-
   CurrentNode(this.reference);
 
   NodeType typ() {
     return Session().getType(reference.$1);
-  }
-
-  void mark(String name) {
-    updates[name] = true;
   }
 
   String? get(String name) {
@@ -75,9 +69,6 @@ class CurrentNode with Render {
   }
 
   void set(String name, String? value) {
-    // final changed = updates[name] ?? false;
-    // if (!changed) return;
-    // updates[name] = false;
     if (_isAttr(name)) {
       return Session().setAttribute(reference.$1, name, value);
     }

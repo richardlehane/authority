@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'xml_web.dart' show Session;
 import 'node.dart' show CurrentNode, NodeType;
 import 'counter.dart';
+import 'tree.dart';
 
 enum View {
   edit,
@@ -84,7 +85,7 @@ class Document {
     Session().dropNode(sessionIndex, n, nt);
     n = (n == 0) ? 0 : n - 1;
     selectedItemIndex = n;
-    refreshTree();
+    prune(n, nt, treeItems, TreeOp.drop);
   }
 
   void addContext([int? n]) {
@@ -95,8 +96,8 @@ class Document {
     } else {
       Session().addSibling(sessionIndex, n, NodeType.contextType);
       selectedItemIndex = n + 1;
-      selectedType = NodeType.contextType;
     }
+    selectedType = NodeType.contextType;
     refreshTree();
   }
 
@@ -122,39 +123,22 @@ class Document {
     refreshTree();
   }
 
-  // todo: move up / move down
-  // todo: authority and context nodes
+  void moveUp(int n, NodeType nt) {
+    Session().moveUp(sessionIndex, n, nt);
+    refreshTree();
+  }
+
+  void moveDown(int n, NodeType nt) {
+    Session().moveDown(sessionIndex, n, nt);
+    refreshTree();
+  }
 }
 
-TreeViewItem? treeNth(int n, NodeType nt, List<TreeViewItem>? list) {
-  if (list == null) {
-    return null;
-  }
-  TreeViewItem? prev;
+// todo: make this a reset, that sets selected to false for all but the current selection & renumbers the nodes.
+void clearSelected(List<TreeViewItem>? list) {
+  if (list == null) return;
   for (final element in list) {
-    if (!nt.like(element.value.$1)) continue;
-    if (element.value.$2 == n) {
-      return element;
-    }
-    if (element.value.$2 > n) {
-      if (prev != null) {
-        final TreeViewItem? el = treeNth(n, nt, prev.children);
-        if (el != null) {
-          return el;
-        }
-      } else {
-        return null;
-      }
-    }
-    prev = element;
+    element.selected = false;
+    clearSelected(element.children);
   }
-  return null;
-}
-
-int treeDescendants(TreeViewItem item) {
-  int tally = item.children.length;
-  for (final element in item.children) {
-    tally += treeDescendants(element);
-  }
-  return tally;
 }

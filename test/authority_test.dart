@@ -12,20 +12,27 @@ void main() {
   });
   test('update attribute', () {
     CurrentNode curr = doc.current();
-    curr.mark("itemno");
     curr.set("itemno", "5.0.1");
     expect(doc.current().get("itemno"), "5.0.1");
   });
   test('delete attribute', () {
     CurrentNode curr = doc.current();
-    curr.mark("itemno");
     curr.set("itemno", null);
     expect(doc.current().get("itemno"), null);
   });
   test('create attribute', () {
     CurrentNode curr = doc.current();
-    curr.mark("itemno");
     curr.set("itemno", "1.1.1");
+    expect(doc.current().get("itemno"), "1.1.1");
+  });
+  test('create sibling', () {
+    doc.addSibling(2, NodeType.classType);
+    doc.setCurrent(3, NodeType.classType);
+    expect(doc.current().get("itemno"), null);
+  });
+  test('move up', () {
+    doc.moveUp(3, NodeType.classType);
+    doc.setCurrent(3, NodeType.classType);
     expect(doc.current().get("itemno"), "1.1.1");
   });
 }
