@@ -2,6 +2,26 @@ import 'package:fluent_ui/fluent_ui.dart'
     show TreeViewItem, FluentIcons, Icon, SizedBox, Text;
 import 'node.dart' show NodeType;
 
+class Counter {
+  int count = -1;
+  NodeType thisNt = NodeType.rootType;
+  int selected = 0;
+  NodeType selectedNt = NodeType.termType;
+
+  Counter(this.selected, this.selectedNt);
+
+  int next(NodeType nt) {
+    if (!thisNt.like(nt)) count = -1;
+    thisNt = nt;
+    count++;
+    return count;
+  }
+
+  bool isSelected() {
+    return thisNt == selectedNt && selected == count;
+  }
+}
+
 enum TreeOp { drop, child, sibling, up, down }
 
 TreeViewItem makeItem(
@@ -93,4 +113,16 @@ int treeDescendants(TreeViewItem item) {
     tally += treeDescendants(element);
   }
   return tally;
+}
+
+// to do: implement!
+List<TreeViewItem> mutate(
+  List<TreeViewItem> old,
+  TreeOp op,
+  int n,
+  NodeType nt,
+  String? itemno,
+  String? title,
+) {
+  return [];
 }

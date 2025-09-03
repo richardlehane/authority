@@ -1,10 +1,8 @@
 import 'package:xml/xml.dart';
-import 'package:fluent_ui/fluent_ui.dart'
-    show TreeViewItem, Text, FluentIcons, Icon;
+import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
-import 'counter.dart';
 import 'node.dart' show NodeType, nodeFromString;
-import 'tree.dart' show makeItem;
+import 'tree.dart' show makeItem, Counter;
 
 const String _template = '''
 <?xml version="1.0" encoding="UTF-8"?>

@@ -2,7 +2,6 @@ import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'xml_web.dart' show Session;
 import 'node.dart' show CurrentNode, NodeType;
-import 'counter.dart';
 import 'tree.dart';
 
 enum View {
@@ -83,8 +82,7 @@ class Document {
 
   void dropNode(int n, NodeType nt) {
     Session().dropNode(sessionIndex, n, nt);
-    n = (n == 0) ? 0 : n - 1;
-    selectedItemIndex = n;
+    selectedItemIndex = (n == 0) ? 0 : n - 1;
     prune(n, nt, treeItems, TreeOp.drop);
   }
 
