@@ -123,9 +123,9 @@
     },
     {
       "name": "flutter_plugin_android_lifecycle",
-      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.29",
+      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_plugin_android_lifecycle-2.0.30",
       "packageUri": "lib/",
-      "languageVersion": "3.6"
+      "languageVersion": "3.7"
     },
     {
       "name": "flutter_web_plugins",
@@ -375,7 +375,7 @@
     },
     {
       "name": "watcher",
-      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/watcher-1.1.2",
+      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/watcher-1.1.3",
       "packageUri": "lib/",
       "languageVersion": "3.1"
     },
