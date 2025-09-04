@@ -83,7 +83,7 @@ class Document {
   void dropNode(int n, NodeType nt) {
     Session().dropNode(sessionIndex, n, nt);
     selectedItemIndex = (n == 0) ? 0 : n - 1;
-    prune(n, nt, treeItems, TreeOp.drop);
+    treeItems = mutate(treeItems!, TreeOp.drop, n, nt, null, null);
   }
 
   void addContext([int? n]) {
