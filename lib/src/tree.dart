@@ -1,5 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart'
-    show TreeViewItem, FluentIcons, Icon, SizedBox, Text;
+    show FluentIcons, Icon, ItemExtension, SizedBox, Text, TreeViewItem;
 import 'node.dart' show NodeType;
 
 class Counter {
@@ -53,6 +53,23 @@ TreeViewItem makeItem(
   );
 }
 
+TreeViewItem copyItemWithChildren(TreeViewItem old, List<TreeViewItem> list) {
+  return TreeViewItem(
+    leading: switch (old.value.$1) {
+      NodeType.termType => Icon(FluentIcons.fabric_folder),
+      NodeType.classType => Icon(FluentIcons.page),
+      NodeType.contextType => Icon(FluentIcons.page_list),
+      _ => null,
+    },
+    content: (old.content is Text)
+        ? Text((old.content as Text).data!)
+        : SizedBox(),
+    value: old.value,
+    selected: old.selected,
+    children: list,
+  );
+}
+
 TreeViewItem? treeNth(int n, NodeType nt, List<TreeViewItem>? list) {
   if (list == null) return null;
   TreeViewItem? prev;
@@ -84,6 +101,34 @@ int treeDescendants(TreeViewItem item) {
   return tally;
 }
 
+bool treeContains(List<TreeViewItem> list, int n, NodeType nt) {
+  for (final element in list) {
+    if (element.value.$1 == nt && element.value.$2 == n) return true;
+  }
+  return false;
+}
+
+TreeViewItem Function(int i) dropGenerator(
+  List<TreeViewItem> old,
+  (NodeType, int) rec,
+) {
+  bool seen = false;
+
+  return (int i) {
+    if (old[i].value == rec) seen = true;
+    if (seen) i++;
+    return copyItemWithChildren(
+      old[i],
+      List.generate(
+        treeContains(old[i].children, rec.$2, rec.$1)
+            ? old[i].children.length - 1
+            : old[i].children.length,
+        dropGenerator(old[i].children, rec),
+      ),
+    );
+  };
+}
+
 // to do: implement!
 List<TreeViewItem> mutate(
   List<TreeViewItem> old,
@@ -93,7 +138,10 @@ List<TreeViewItem> mutate(
   String? itemno,
   String? title,
 ) {
-  return [];
+  return List.generate(
+    treeContains(old, n, nt) ? old.length - 1 : old.length,
+    dropGenerator(old, (nt, n)),
+  );
 }
 
 bool treesEqual(List<TreeViewItem> a, List<TreeViewItem> b) {
