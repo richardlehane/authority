@@ -1,5 +1,6 @@
 import 'package:authority/authority.dart';
 import 'package:test/test.dart';
+import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 
 void main() {
   Document doc = Document.empty();
@@ -34,5 +35,14 @@ void main() {
     doc.moveUp(3, NodeType.classType);
     doc.setCurrent(3, NodeType.classType);
     expect(doc.current().get("itemno"), "1.1.1");
+  });
+  test('equality', () {
+    List<TreeViewItem> a = [
+      makeItem(0, NodeType.classType, false, null, null, []),
+    ];
+    List<TreeViewItem> b = [
+      makeItem(0, NodeType.classType, false, null, null, []),
+    ];
+    expect(treesEqual(a, b), true);
   });
 }

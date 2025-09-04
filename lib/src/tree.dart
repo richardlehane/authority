@@ -53,37 +53,6 @@ TreeViewItem makeItem(
   );
 }
 
-bool prune(int n, NodeType nt, List<TreeViewItem>? list, TreeOp op) {
-  if (list == null) return false;
-  TreeViewItem? prev;
-  int idx = 0;
-  for (final element in list) {
-    if (!nt.like(element.value.$1)) continue;
-    if (element.value.$2 == n) {
-      switch (op) {
-        case TreeOp.drop:
-          list.remove(element);
-        case TreeOp.child:
-          element.children.add(makeItem(0, nt, false, null, null, []));
-        case TreeOp.sibling:
-          list.insert(idx, makeItem(0, nt, false, null, null, []));
-        default:
-      }
-      return true;
-    }
-    if (element.value.$2 > n) {
-      if (prev != null) {
-        if (prune(n, nt, prev.children, op)) return true;
-      } else {
-        return false;
-      }
-    }
-    idx++;
-    prev = element;
-  }
-  return false;
-}
-
 TreeViewItem? treeNth(int n, NodeType nt, List<TreeViewItem>? list) {
   if (list == null) return null;
   TreeViewItem? prev;
@@ -125,4 +94,47 @@ List<TreeViewItem> mutate(
   String? title,
 ) {
   return [];
+}
+
+bool treesEqual(List<TreeViewItem> a, List<TreeViewItem> b) {
+  if (a.length != b.length) return false;
+  for (final ea in a) {
+    for (final eb in b) {
+      if (ea.value != eb.value) return false;
+      if (ea.selected != eb.selected) return false;
+      if (!(treesEqual(ea.children, eb.children))) return false;
+    }
+  }
+  return true;
+}
+
+bool prune(int n, NodeType nt, List<TreeViewItem>? list, TreeOp op) {
+  if (list == null) return false;
+  TreeViewItem? prev;
+  int idx = 0;
+  for (final element in list) {
+    if (!nt.like(element.value.$1)) continue;
+    if (element.value.$2 == n) {
+      switch (op) {
+        case TreeOp.drop:
+          list.removeAt(idx);
+        case TreeOp.child:
+          element.children.add(makeItem(0, nt, false, null, null, []));
+        case TreeOp.sibling:
+          list.insert(idx, makeItem(0, nt, false, null, null, []));
+        default:
+      }
+      return true;
+    }
+    if (element.value.$2 > n) {
+      if (prev != null) {
+        if (prune(n, nt, prev.children, op)) return true;
+      } else {
+        return false;
+      }
+    }
+    idx++;
+    prev = element;
+  }
+  return false;
 }
