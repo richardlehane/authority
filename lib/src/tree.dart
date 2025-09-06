@@ -53,23 +53,6 @@ TreeViewItem makeItem(
   );
 }
 
-TreeViewItem copyItemWithChildren(TreeViewItem old, List<TreeViewItem> list) {
-  return TreeViewItem(
-    leading: switch (old.value.$1) {
-      NodeType.termType => Icon(FluentIcons.fabric_folder),
-      NodeType.classType => Icon(FluentIcons.page),
-      NodeType.contextType => Icon(FluentIcons.page_list),
-      _ => null,
-    },
-    content: (old.content is Text)
-        ? Text((old.content as Text).data!)
-        : SizedBox(),
-    value: old.value,
-    selected: old.selected,
-    children: list,
-  );
-}
-
 TreeViewItem? treeNth(Ref ref, List<TreeViewItem>? list) {
   if (list == null) return null;
   TreeViewItem? prev;
@@ -101,27 +84,54 @@ int treeDescendants(TreeViewItem item) {
   return tally;
 }
 
-bool treeContains(List<TreeViewItem> list, Ref ref) {
+bool _treeContains(List<TreeViewItem> list, Ref ref) {
   for (final element in list) {
     if (element.value == ref) return true;
   }
   return false;
 }
 
-TreeViewItem Function(int i) dropGenerator(List<TreeViewItem> old, Ref ref) {
+TreeViewItem _copyItemWithChildren(
+  TreeViewItem old,
+  List<TreeViewItem> list, {
+  Counter? ctr,
+}) {
+  return TreeViewItem(
+    leading: switch (old.value.$1) {
+      NodeType.termType => Icon(FluentIcons.fabric_folder),
+      NodeType.classType => Icon(FluentIcons.page),
+      NodeType.contextType => Icon(FluentIcons.page_list),
+      _ => null,
+    },
+    content: (old.content is Text)
+        ? Text((old.content as Text).data!)
+        : SizedBox(),
+    value: (ctr == null) ? old.value : (old.value.$1, ctr.next(old.value.$1)),
+    selected: (ctr == null) ? old.selected : ctr.isSelected(),
+    expanded: old.expanded,
+    children: list,
+  );
+}
+
+TreeViewItem Function(int i) _dropGenerator(
+  List<TreeViewItem> old,
+  Ref ref,
+  Counter ctr,
+) {
   bool seen = false;
 
   return (int i) {
     if (old[i].value == ref) seen = true;
     if (seen) i++;
-    return copyItemWithChildren(
+    return _copyItemWithChildren(
       old[i],
       List.generate(
-        treeContains(old[i].children, ref)
+        _treeContains(old[i].children, ref)
             ? old[i].children.length - 1
             : old[i].children.length,
-        dropGenerator(old[i].children, ref),
+        _dropGenerator(old[i].children, ref, ctr),
       ),
+      ctr: ctr,
     );
   };
 }
@@ -130,13 +140,15 @@ TreeViewItem Function(int i) dropGenerator(List<TreeViewItem> old, Ref ref) {
 List<TreeViewItem> mutate(
   List<TreeViewItem> old,
   TreeOp op,
-  Ref ref,
+  Ref ref, {
+  Counter? ctr,
+  NodeType? nt,
   String? itemno,
   String? title,
-) {
+}) {
   return List.generate(
-    treeContains(old, ref) ? old.length - 1 : old.length,
-    dropGenerator(old, ref),
+    _treeContains(old, ref) ? old.length - 1 : old.length,
+    _dropGenerator(old, ref, ctr!),
   );
 }
 

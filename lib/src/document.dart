@@ -76,8 +76,12 @@ class Document {
 
   void dropNode(Ref ref) {
     Session().dropNode(sessionIndex, ref);
-    // selected = (ref.$2 == 0) ? 0 : ref.$2 - 1;
-    treeItems = mutate(treeItems!, TreeOp.drop, ref, null, null);
+    selected = (ref.$2 == 0)
+        ? (ref.$1 == NodeType.contextType)
+              ? (NodeType.rootType, 0)
+              : (ref.$1, 0)
+        : (ref.$1, ref.$2 - 1);
+    treeItems = mutate(treeItems!, TreeOp.drop, ref, ctr: Counter(selected));
   }
 
   // void addContext([int? n]) {
