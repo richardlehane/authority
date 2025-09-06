@@ -94,7 +94,8 @@ bool _treeContains(List<TreeViewItem> list, Ref ref) {
 TreeViewItem _copyItemWithChildren(
   TreeViewItem old,
   List<TreeViewItem> list, {
-  Counter? ctr,
+  int? index,
+  bool? selected,
 }) {
   return TreeViewItem(
     leading: switch (old.value.$1) {
@@ -106,8 +107,8 @@ TreeViewItem _copyItemWithChildren(
     content: (old.content is Text)
         ? Text((old.content as Text).data!)
         : SizedBox(),
-    value: (ctr == null) ? old.value : (old.value.$1, ctr.next(old.value.$1)),
-    selected: (ctr == null) ? old.selected : ctr.isSelected(),
+    value: (index == null) ? old.value : (old.value.$1, index),
+    selected: (selected == null) ? old.selected : selected,
     expanded: old.expanded,
     children: list,
   );
@@ -123,6 +124,8 @@ TreeViewItem Function(int i) _dropGenerator(
   return (int i) {
     if (old[i].value == ref) seen = true;
     if (seen) i++;
+    int index = ctr.next(old[i].value.$1);
+    bool selected = ctr.isSelected();
     return _copyItemWithChildren(
       old[i],
       List.generate(
@@ -131,7 +134,8 @@ TreeViewItem Function(int i) _dropGenerator(
             : old[i].children.length,
         _dropGenerator(old[i].children, ref, ctr),
       ),
-      ctr: ctr,
+      index: index,
+      selected: selected,
     );
   };
 }
