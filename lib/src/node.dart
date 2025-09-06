@@ -1,6 +1,7 @@
 import 'xml_web.dart';
 import 'package:xml/xml.dart' show XmlElement;
 import "render.dart";
+import 'tree.dart' show Ref;
 
 enum NodeType {
   rootType,
@@ -54,41 +55,42 @@ NodeType nodeFromString(String name) {
 bool _isAttr(String name) => name[0] == name[0].toLowerCase();
 
 class CurrentNode with Render {
-  (int, int, NodeType) reference;
-  CurrentNode(this.reference);
+  int session;
+  Ref ref;
+  CurrentNode(this.session, this.ref);
 
   NodeType typ() {
-    return Session().getType(reference.$1);
+    return Session().getType(session);
   }
 
   String? get(String name) {
     if (_isAttr(name)) {
-      return Session().getAttribute(reference.$1, name);
+      return Session().getAttribute(session, name);
     }
-    return Session().getElement(reference.$1, name);
+    return Session().getElement(session, name);
   }
 
   void set(String name, String? value) {
     if (_isAttr(name)) {
-      return Session().setAttribute(reference.$1, name, value);
+      return Session().setAttribute(session, name, value);
     }
-    return Session().setElement(reference.$1, name, value);
+    return Session().setElement(session, name, value);
   }
 
   List<XmlElement>? getParagraphs(String name) {
-    return Session().getParagraphs(reference.$1, name);
+    return Session().getParagraphs(session, name);
   }
 
   void setParagraphs(String name, List<XmlElement>? paras) {
-    return Session().setParagraphs(reference.$1, name, paras);
+    return Session().setParagraphs(session, name, paras);
   }
 
   int multiLen(String name) {
-    return Session().multiLen(reference.$1, name);
+    return Session().multiLen(session, name);
   }
 
   int multiAdd(String name, String? sub) {
-    return Session().multiAdd(reference.$1, name, sub);
+    return Session().multiAdd(session, name, sub);
   }
 
   void multiDrop(String name, int idx) {} // todo
@@ -99,16 +101,16 @@ class CurrentNode with Render {
 
   // todo: set attribute
   void multiSet(String name, int idx, String? sub, String? val) {
-    return Session().multiSet(reference.$1, name, idx, sub, val);
+    return Session().multiSet(session, name, idx, sub, val);
   }
 
   // todo: get attribute
   String? multiGet(String name, int idx, String? sub) {
-    return Session().multiGet(reference.$1, name, idx, sub);
+    return Session().multiGet(session, name, idx, sub);
   }
 
   List<XmlElement>? multiGetParagraphs(String name, int idx, String? sub) {
-    return Session().multiGetParagraphs(reference.$1, name, idx, sub);
+    return Session().multiGetParagraphs(session, name, idx, sub);
   }
 
   void multiSetParagraphs(
@@ -117,7 +119,7 @@ class CurrentNode with Render {
     String? sub,
     List<XmlElement>? val,
   ) {
-    return Session().multiSetParagraphs(reference.$1, name, idx, sub, val);
+    return Session().multiSetParagraphs(session, name, idx, sub, val);
   }
 
   // todo

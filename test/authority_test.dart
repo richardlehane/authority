@@ -8,7 +8,7 @@ void main() {
     expect(doc.title, "Untitled");
   });
   test('set current node', () {
-    doc.setCurrent(2, NodeType.classType);
+    doc.setCurrent((NodeType.classType, 2));
     expect(doc.current().typ(), NodeType.classType);
   });
   test('update attribute', () {
@@ -27,21 +27,21 @@ void main() {
     expect(doc.current().get("itemno"), "1.1.1");
   });
   test('create sibling', () {
-    doc.addSibling(2, NodeType.classType);
-    doc.setCurrent(3, NodeType.classType);
+    doc.addSibling((NodeType.classType, 2), NodeType.classType);
+    doc.setCurrent((NodeType.classType, 3));
     expect(doc.current().get("itemno"), null);
   });
   test('move up', () {
-    doc.moveUp(3, NodeType.classType);
-    doc.setCurrent(3, NodeType.classType);
+    doc.moveUp((NodeType.classType, 3));
+    doc.setCurrent((NodeType.classType, 3));
     expect(doc.current().get("itemno"), "1.1.1");
   });
   test('equality', () {
     List<TreeViewItem> a = [
-      makeItem(0, NodeType.classType, false, null, null, []),
+      makeItem((NodeType.classType, 0), false, null, null, []),
     ];
     List<TreeViewItem> b = [
-      makeItem(0, NodeType.classType, false, null, null, []),
+      makeItem((NodeType.classType, 0), false, null, null, []),
     ];
     expect(treesEqual(a, b), true);
   });

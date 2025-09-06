@@ -24,8 +24,7 @@ class Document {
   String? path;
   List<TreeViewItem>? treeItems;
   int sessionIndex;
-  int selectedItemIndex;
-  NodeType selectedType;
+  Ref selected;
   View view = View.edit;
 
   Document({
@@ -33,8 +32,7 @@ class Document {
     this.path = null,
     this.treeItems,
     this.sessionIndex = 0,
-    this.selectedItemIndex = 0,
-    this.selectedType = NodeType.rootType,
+    this.selected = (NodeType.rootType, 0),
   });
 
   /// Create a new empty document model with default structure
@@ -43,7 +41,7 @@ class Document {
     final sessionIndex = sess.empty();
     return Document(
       title: title,
-      treeItems: sess.tree(sessionIndex, Counter(0, NodeType.termType)),
+      treeItems: sess.tree(sessionIndex, Counter()),
       sessionIndex: sessionIndex,
     );
   }
@@ -54,7 +52,7 @@ class Document {
     return Document(
       title: f.name,
       // path: f.path, ???
-      treeItems: sess.tree(sessionIndex, Counter(0, NodeType.termType)),
+      treeItems: sess.tree(sessionIndex, Counter()),
       sessionIndex: sessionIndex,
     );
   }
@@ -65,69 +63,63 @@ class Document {
   }
 
   void refreshTree() {
-    treeItems = Session().tree(
-      sessionIndex,
-      Counter(selectedItemIndex, selectedType),
-    );
+    treeItems = Session().tree(sessionIndex, Counter(selected));
   }
 
   CurrentNode current() {
-    return CurrentNode((sessionIndex, selectedItemIndex, selectedType));
+    return CurrentNode(sessionIndex, selected);
   }
 
-  void setCurrent(int index, NodeType nt) {
-    selectedItemIndex = index;
-    Session().setCurrent(sessionIndex, index, nt);
+  void setCurrent(Ref ref) {
+    Session().setCurrent(sessionIndex, ref);
   }
 
-  void dropNode(int n, NodeType nt) {
-    Session().dropNode(sessionIndex, n, nt);
-    selectedItemIndex = (n == 0) ? 0 : n - 1;
-    treeItems = mutate(treeItems!, TreeOp.drop, n, nt, null, null);
+  void dropNode(Ref ref) {
+    Session().dropNode(sessionIndex, ref);
+    // selected = (ref.$2 == 0) ? 0 : ref.$2 - 1;
+    treeItems = mutate(treeItems!, TreeOp.drop, ref, null, null);
   }
 
-  void addContext([int? n]) {
-    if (n == null) {
-      Session().addContext(sessionIndex);
-      selectedItemIndex =
-          treeItems![1].children.length - 1; // live dangerously!
-    } else {
-      Session().addSibling(sessionIndex, n, NodeType.contextType);
-      selectedItemIndex = n + 1;
-    }
-    selectedType = NodeType.contextType;
+  // void addContext([int? n]) {
+  //   if (n == null) {
+  //     Session().addContext(sessionIndex);
+  //     selected = (
+  //       NodeType.contextType,
+  //       treeItems![1].children.length - 1,
+  //     ); // live dangerously!
+  //   } else {
+  //     Session().addSibling(sessionIndex, (
+  //       NodeType.contextType,
+  //       n,
+  //     ), NodeType.contextType);
+  //     selected = (NodeType.contextType, n + 1);
+  //   }
+  //   refreshTree();
+  // }
+
+  void addChild(Ref ref, NodeType nt) {
+    Session().addChild(sessionIndex, ref, nt);
+    // update selectedItemIndex by walking the treemenu TODO: fix
+    final TreeViewItem? it = treeNth(ref, treeItems);
+    if (it != null) selected = (nt, ref.$2 + treeDescendants(it) + 1);
     refreshTree();
   }
 
-  void addChild(int n, NodeType nt) {
-    Session().addChild(sessionIndex, n, nt);
-    // update selectedItemIndex by walking the treemenu
-    final TreeViewItem? it = treeNth(n, nt, treeItems);
-    if (it != null) {
-      selectedItemIndex = n + treeDescendants(it) + 1;
-      selectedType = nt;
-    }
+  void addSibling(Ref ref, NodeType nt) {
+    Session().addSibling(sessionIndex, ref, nt);
+    // update selectedItemIndex by walking the treemenu TODO: fix
+    final TreeViewItem? it = treeNth(ref, treeItems);
+    if (it != null) selected = (nt, ref.$2 + treeDescendants(it) + 1);
     refreshTree();
   }
 
-  void addSibling(int n, NodeType nt) {
-    Session().addSibling(sessionIndex, n, nt);
-    // update selectedItemIndex by walking the treemenu
-    final TreeViewItem? it = treeNth(n, nt, treeItems);
-    if (it != null) {
-      selectedItemIndex = n + treeDescendants(it) + 1;
-      selectedType = nt;
-    }
+  void moveUp(Ref ref) {
+    Session().moveUp(sessionIndex, ref);
     refreshTree();
   }
 
-  void moveUp(int n, NodeType nt) {
-    Session().moveUp(sessionIndex, n, nt);
-    refreshTree();
-  }
-
-  void moveDown(int n, NodeType nt) {
-    Session().moveDown(sessionIndex, n, nt);
+  void moveDown(Ref ref) {
+    Session().moveDown(sessionIndex, ref);
     refreshTree();
   }
 }

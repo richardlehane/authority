@@ -1,14 +1,15 @@
 import 'package:fluent_ui/fluent_ui.dart'
-    show FluentIcons, Icon, ItemExtension, SizedBox, Text, TreeViewItem;
+    show FluentIcons, Icon, SizedBox, Text, TreeViewItem;
 import 'node.dart' show NodeType;
+
+typedef Ref = (NodeType, int);
 
 class Counter {
   int count = -1;
   NodeType thisNt = NodeType.rootType;
-  int selected = 0;
-  NodeType selectedNt = NodeType.termType;
+  Ref selected;
 
-  Counter(this.selected, this.selectedNt);
+  Counter([this.selected = (NodeType.termType, 0)]);
 
   int next(NodeType nt) {
     if (!thisNt.like(nt)) count = -1;
@@ -18,15 +19,14 @@ class Counter {
   }
 
   bool isSelected() {
-    return thisNt == selectedNt && selected == count;
+    return thisNt == selected.$1 && count == selected.$2;
   }
 }
 
 enum TreeOp { drop, child, sibling, up, down }
 
 TreeViewItem makeItem(
-  int n,
-  NodeType nt,
+  Ref ref,
   bool selected,
   String? itemno,
   String? title,
@@ -40,14 +40,14 @@ TreeViewItem makeItem(
       ? itemno
       : "$itemno ${title}";
   return TreeViewItem(
-    leading: switch (nt) {
+    leading: switch (ref.$1) {
       NodeType.termType => Icon(FluentIcons.fabric_folder),
       NodeType.classType => Icon(FluentIcons.page),
       NodeType.contextType => Icon(FluentIcons.page_list),
       _ => null,
     },
     content: (label == null) ? SizedBox() : Text(label),
-    value: (nt, n),
+    value: ref,
     selected: selected,
     children: list,
   );
@@ -70,17 +70,17 @@ TreeViewItem copyItemWithChildren(TreeViewItem old, List<TreeViewItem> list) {
   );
 }
 
-TreeViewItem? treeNth(int n, NodeType nt, List<TreeViewItem>? list) {
+TreeViewItem? treeNth(Ref ref, List<TreeViewItem>? list) {
   if (list == null) return null;
   TreeViewItem? prev;
   for (final element in list) {
-    if (!nt.like(element.value.$1)) continue;
-    if (element.value.$2 == n) {
+    if (!ref.$1.like(element.value.$1)) continue;
+    if (element.value == ref) {
       return element;
     }
-    if (element.value.$2 > n) {
+    if (element.value.$2 > ref.$2) {
       if (prev != null) {
-        final TreeViewItem? el = treeNth(n, nt, prev.children);
+        final TreeViewItem? el = treeNth(ref, prev.children);
         if (el != null) {
           return el;
         }
@@ -101,29 +101,26 @@ int treeDescendants(TreeViewItem item) {
   return tally;
 }
 
-bool treeContains(List<TreeViewItem> list, int n, NodeType nt) {
+bool treeContains(List<TreeViewItem> list, Ref ref) {
   for (final element in list) {
-    if (element.value.$1 == nt && element.value.$2 == n) return true;
+    if (element.value == ref) return true;
   }
   return false;
 }
 
-TreeViewItem Function(int i) dropGenerator(
-  List<TreeViewItem> old,
-  (NodeType, int) rec,
-) {
+TreeViewItem Function(int i) dropGenerator(List<TreeViewItem> old, Ref ref) {
   bool seen = false;
 
   return (int i) {
-    if (old[i].value == rec) seen = true;
+    if (old[i].value == ref) seen = true;
     if (seen) i++;
     return copyItemWithChildren(
       old[i],
       List.generate(
-        treeContains(old[i].children, rec.$2, rec.$1)
+        treeContains(old[i].children, ref)
             ? old[i].children.length - 1
             : old[i].children.length,
-        dropGenerator(old[i].children, rec),
+        dropGenerator(old[i].children, ref),
       ),
     );
   };
@@ -133,14 +130,13 @@ TreeViewItem Function(int i) dropGenerator(
 List<TreeViewItem> mutate(
   List<TreeViewItem> old,
   TreeOp op,
-  int n,
-  NodeType nt,
+  Ref ref,
   String? itemno,
   String? title,
 ) {
   return List.generate(
-    treeContains(old, n, nt) ? old.length - 1 : old.length,
-    dropGenerator(old, (nt, n)),
+    treeContains(old, ref) ? old.length - 1 : old.length,
+    dropGenerator(old, ref),
   );
 }
 
@@ -154,35 +150,4 @@ bool treesEqual(List<TreeViewItem> a, List<TreeViewItem> b) {
     }
   }
   return true;
-}
-
-bool prune(int n, NodeType nt, List<TreeViewItem>? list, TreeOp op) {
-  if (list == null) return false;
-  TreeViewItem? prev;
-  int idx = 0;
-  for (final element in list) {
-    if (!nt.like(element.value.$1)) continue;
-    if (element.value.$2 == n) {
-      switch (op) {
-        case TreeOp.drop:
-          list.removeAt(idx);
-        case TreeOp.child:
-          element.children.add(makeItem(0, nt, false, null, null, []));
-        case TreeOp.sibling:
-          list.insert(idx, makeItem(0, nt, false, null, null, []));
-        default:
-      }
-      return true;
-    }
-    if (element.value.$2 > n) {
-      if (prev != null) {
-        if (prune(n, nt, prev.children, op)) return true;
-      } else {
-        return false;
-      }
-    }
-    idx++;
-    prev = element;
-  }
-  return false;
 }

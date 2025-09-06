@@ -1,3 +1,3 @@
 export 'src/document.dart' show View, Document;
 export 'src/node.dart' show NodeType, CurrentNode;
-export 'src/tree.dart' show makeItem, treesEqual;
+export 'src/tree.dart' show Ref, makeItem, treesEqual;

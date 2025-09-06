@@ -2,7 +2,7 @@ import 'package:xml/xml.dart';
 import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'node.dart' show NodeType, nodeFromString;
-import 'tree.dart' show makeItem, Counter;
+import 'tree.dart' show makeItem, Counter, Ref;
 
 const String _template = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -28,7 +28,7 @@ class Session {
 
   int _init(XmlDocument doc) {
     documents.add(doc);
-    nodes.add(nth(doc, 0, NodeType.termType));
+    nodes.add(_nth(doc, (NodeType.termType, 0)));
     return documents.length - 1;
   }
 
@@ -49,50 +49,47 @@ class Session {
   List<TreeViewItem> tree(int index, Counter ctr) {
     ctr.next(NodeType.rootType);
     List<TreeViewItem> ret = [
-      makeItem(0, NodeType.rootType, ctr.isSelected(), null, "Details", []),
+      makeItem((NodeType.rootType, 0), ctr.isSelected(), null, "Details", []),
       makeItem(
-        0,
-        NodeType.none,
+        (NodeType.none, 0),
         false,
         null,
         "Context",
         _addContext(documents[index].rootElement, ctr),
       ),
     ];
-    ret.addAll(_addChildren(termsClasses(documents[index].rootElement), ctr));
+    ret.addAll(_addChildren(_termsClasses(documents[index].rootElement), ctr));
     return ret;
   }
 
   String asString(int index) =>
       documents[index].toXmlString(pretty: true, indent: '\t');
 
-  void setCurrent(int index, int n, NodeType nt) {
+  void setCurrent(int index, Ref ref) {
     // todo: authority/ context nodes
-    nodes[index] = nth(documents[index], n, nt);
+    nodes[index] = _nth(documents[index], ref);
   }
 
   // tree operations
-  void dropNode(int index, int n, NodeType nt) {
-    XmlElement? el = nth(documents[index], n, nt);
+  void dropNode(int index, Ref ref) {
+    XmlElement? el = _nth(documents[index], ref);
     if (el == null) return;
     el.remove();
   }
 
-  void addContext(int index) {
-    XmlElement root = documents[index].rootElement;
-    (int, int) p = insertPos(root, "Context");
-    root.children.insert(p.$1, XmlElement(XmlName("Context")));
-    return;
-  }
-
-  void addChild(int index, int n, NodeType nt) {
-    XmlElement? el = nth(documents[index], n, nt);
+  void addChild(int index, Ref ref, NodeType nt) {
+    XmlElement? el = _nth(documents[index], ref);
     if (el == null) return;
+    if (nt == NodeType.contextType) {
+      (int, int) p = _insertPos(el, "Context");
+      el.children.insert(p.$1, XmlElement(XmlName("Context")));
+      return;
+    }
     el.children.add(XmlElement(XmlName(nt.toString())));
   }
 
-  void addSibling(int index, int n, NodeType nt) {
-    XmlElement? el = nth(documents[index], n, nt);
+  void addSibling(int index, Ref ref, NodeType nt) {
+    XmlElement? el = _nth(documents[index], ref);
     if (el == null) return;
     el.parentElement!.children.insert(
       _pos(el) + 1,
@@ -100,20 +97,20 @@ class Session {
     );
   }
 
-  void moveUp(int index, int n, NodeType nt) {
-    XmlElement? el = nth(documents[index], n, nt);
+  void moveUp(int index, Ref ref) {
+    XmlElement? el = _nth(documents[index], ref);
     if (el == null) return;
     XmlElement? prev = el.previousElementSibling;
-    if (prev == null || !nt.like(nodeFromString(prev.localName))) return;
+    if (prev == null || !ref.$1.like(nodeFromString(prev.localName))) return;
     el.remove();
     prev.parentElement!.children.insert(_pos(prev), el);
   }
 
-  void moveDown(int index, int n, NodeType nt) {
-    XmlElement? el = nth(documents[index], n, nt);
+  void moveDown(int index, Ref ref) {
+    XmlElement? el = _nth(documents[index], ref);
     if (el == null) return;
     XmlElement? next = el.nextElementSibling;
-    if (next == null || !nt.like(nodeFromString(next.localName))) return;
+    if (next == null || !ref.$1.like(nodeFromString(next.localName))) return;
     el.remove();
     next.parentElement!.children.insert(_pos(next) + 1, el);
   }
@@ -167,7 +164,7 @@ class Session {
     }
     // insert
     t = XmlElement(XmlName(name), [], [XmlText(value)], false);
-    (int, int) p = insertPos(el, name);
+    (int, int) p = _insertPos(el, name);
     el.children.insert(p.$1, t);
     return;
   }
@@ -196,7 +193,7 @@ class Session {
       if (paras == null) return;
       // inserting
       parent = XmlElement(XmlName(name), [], paras, false);
-      (int, int) p = insertPos(el, name);
+      (int, int) p = _insertPos(el, name);
       el.children.insert(p.$1, parent);
       return;
     }
@@ -235,7 +232,7 @@ class Session {
     if (el == null) return 0;
     // todo: special case Status and SeeReference - SeeReference uses the sub parameter
     XmlElement t = XmlElement(XmlName(name), [], [], false);
-    (int, int) p = insertPos(el, name);
+    (int, int) p = _insertPos(el, name);
     el.children.insert(p.$1, t);
     return p.$2; // todo
   }
@@ -250,7 +247,7 @@ class Session {
       String? a = (val == "") ? null : val;
       if (t == null) {
         t = XmlElement(XmlName("RetentionPeriod"), [], [], false);
-        (int, int) p = insertPos(el, "RetentionPeriod");
+        (int, int) p = _insertPos(el, "RetentionPeriod");
         el.children.insert(p.$1, t);
       }
       t.setAttribute("unit", a, namespace: _ns);
@@ -270,7 +267,7 @@ class Session {
       }
       // insert
       t = XmlElement(XmlName(sub), [], [XmlText(val)], false);
-      (int, int) p = insertPos(el, sub);
+      (int, int) p = _insertPos(el, sub);
       el.children.insert(p.$1, t);
       return;
     }
@@ -331,7 +328,7 @@ class Session {
       if (val == null) return;
       // inserting
       el = XmlElement(XmlName(sub!), [], val, false);
-      (int, int) p = insertPos(parent, sub);
+      (int, int) p = _insertPos(parent, sub);
       parent.children.insert(p.$1, el);
       return;
     }
@@ -354,8 +351,7 @@ List<TreeViewItem> _addContext(XmlElement root, Counter ctr) {
     final int index = ctr.next(NodeType.contextType);
     final bool selected = ctr.isSelected();
     return makeItem(
-      index,
-      NodeType.contextType,
+      (NodeType.contextType, index),
       selected,
       null,
       item.getElement("ContextTitle")?.innerText,
@@ -372,19 +368,18 @@ List<TreeViewItem> _addChildren(List<XmlElement> list, Counter ctr) {
     final int index = ctr.next(nt);
     final bool selected = ctr.isSelected();
     return makeItem(
-      index,
-      nt,
+      (nt, index),
       selected,
       item.getAttribute("itemno"),
       nt == NodeType.termType
           ? item.getAttribute('TermTitle')
           : item.getElement('ClassTitle')?.innerText,
-      _addChildren(termsClasses(item), ctr),
+      _addChildren(_termsClasses(item), ctr),
     );
   }).toList();
 }
 
-List<XmlElement> termsClasses(XmlElement el) {
+List<XmlElement> _termsClasses(XmlElement el) {
   if (el.name.local == 'Class') {
     return [];
   }
@@ -393,46 +388,36 @@ List<XmlElement> termsClasses(XmlElement el) {
       .toList();
 }
 
-XmlElement? nth(XmlDocument? doc, int n, NodeType nt) {
-  switch (nt) {
+XmlElement? _nth(XmlDocument? doc, Ref ref) {
+  switch (ref.$1) {
     case NodeType.none:
       return null;
     case NodeType.rootType:
       return doc?.rootElement;
     case NodeType.contextType:
-      return nthContext(doc, n);
+      return doc?.rootElement.findElements("Context").elementAt(ref.$2);
     default:
-      return nthTermClass(doc, n);
+      return _nthTermClass(doc, ref.$2);
   }
 }
 
-XmlElement? nthContext(XmlDocument? doc, int n) {
-  return doc?.rootElement.findElements("Context").elementAt(n);
-}
-
-XmlElement? nthTermClass(XmlDocument? doc, int n) {
+XmlElement? _nthTermClass(XmlDocument? doc, int n) {
   int idx = -1;
   XmlElement? descend(XmlElement el) {
     for (XmlElement child in el.childElements.where(
       (e) => e.name.local == 'Term' || e.name.local == 'Class',
     )) {
       idx++;
-      if (idx == n) {
-        return child;
-      }
+      if (idx == n) return child;
       if (child.name.local == 'Term') {
         var ret = descend(child);
-        if (ret != null) {
-          return ret;
-        }
+        if (ret != null) return ret;
       }
     }
     return null;
   }
 
-  if (doc == null) {
-    return null;
-  }
+  if (doc == null) return null;
   return descend(doc.rootElement);
 }
 
@@ -486,7 +471,7 @@ const disposalElements = [
 ];
 
 // determine where to insert a new element
-(int, int) insertPos(XmlElement el, String name) {
+(int, int) _insertPos(XmlElement el, String name) {
   int pos = 0;
   int multi = 0;
   List<String> prev = switch (el.localName) {
