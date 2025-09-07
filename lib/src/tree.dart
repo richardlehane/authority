@@ -91,6 +91,7 @@ Ref? getSelected(List<TreeViewItem>? list) {
     final cref = getSelected(element.children);
     if (cref != null) return cref;
   }
+  return null;
 }
 
 TreeViewItem? treeNth(Ref ref, List<TreeViewItem>? list) {
@@ -244,7 +245,7 @@ TreeViewItem Function(int i) _childGenerator(
     return _copyItemWithChildren(
       old[i],
       List.generate(
-        (old[1].value == ref)
+        (old[i].value == ref)
             ? old[i].children.length + 1
             : old[i].children.length,
         _childGenerator(old[i].children, ref, ctr, nt),
