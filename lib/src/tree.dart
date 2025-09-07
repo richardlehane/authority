@@ -300,10 +300,7 @@ List<TreeViewItem> mutate(
         _siblingGenerator(old, ref, ctr!, nt!),
       );
     case TreeOp.child:
-      return List.generate(
-        (ref.$1 == NodeType.contextType) ? old.length + 1 : old.length,
-        _childGenerator(old, ref, ctr!, nt!),
-      );
+      return List.generate(old.length, _childGenerator(old, ref, ctr!, nt!));
     case TreeOp.up:
       return List.generate(old.length, _moveGenerator(old, ref, ctr!, true));
     case TreeOp.down:
