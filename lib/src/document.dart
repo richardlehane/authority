@@ -87,7 +87,13 @@ class Document {
 
   void addChild(Ref ref, NodeType nt) {
     Session().addChild(sessionIndex, ref, nt);
-    treeItems = mutate(treeItems!, TreeOp.child, ref, ctr: Counter(), nt: nt);
+    treeItems = mutate(
+      treeItems!,
+      TreeOp.child,
+      (nt == NodeType.contextType) ? (NodeType.none, 0) : ref,
+      ctr: Counter(),
+      nt: nt,
+    );
     setCurrent(getSelected(treeItems!) ?? (NodeType.rootType, 0));
   }
 
