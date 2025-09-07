@@ -41,7 +41,7 @@ class Document {
     final sessionIndex = sess.empty();
     return Document(
       title: title,
-      treeItems: sess.tree(sessionIndex, Counter()),
+      treeItems: treeFrom(sess.tree(sessionIndex, Counter())),
       sessionIndex: sessionIndex,
     );
   }
@@ -52,7 +52,7 @@ class Document {
     return Document(
       title: f.name,
       // path: f.path, ???
-      treeItems: sess.tree(sessionIndex, Counter()),
+      treeItems: treeFrom(sess.tree(sessionIndex, Counter())),
       sessionIndex: sessionIndex,
     );
   }
@@ -63,7 +63,7 @@ class Document {
   }
 
   void refreshTree() {
-    treeItems = Session().tree(sessionIndex, Counter(selected));
+    treeItems = treeFrom(Session().tree(sessionIndex, Counter(selected)));
   }
 
   CurrentNode current() {
@@ -84,47 +84,30 @@ class Document {
     treeItems = mutate(treeItems!, TreeOp.drop, ref, ctr: Counter(selected));
   }
 
-  // void addContext([int? n]) {
-  //   if (n == null) {
-  //     Session().addContext(sessionIndex);
-  //     selected = (
-  //       NodeType.contextType,
-  //       treeItems![1].children.length - 1,
-  //     ); // live dangerously!
-  //   } else {
-  //     Session().addSibling(sessionIndex, (
-  //       NodeType.contextType,
-  //       n,
-  //     ), NodeType.contextType);
-  //     selected = (NodeType.contextType, n + 1);
-  //   }
-  //   refreshTree();
-  // }
-
   void addChild(Ref ref, NodeType nt) {
     Session().addChild(sessionIndex, ref, nt);
     // update selectedItemIndex by walking the treemenu TODO: fix
-    final TreeViewItem? it = treeNth(ref, treeItems);
-    if (it != null) selected = (nt, ref.$2 + treeDescendants(it) + 1);
-    refreshTree();
+    // final TreeViewItem? it = treeNth(ref, treeItems);
+    // if (it != null) selected = (nt, ref.$2 + treeDescendants(it) + 1);
+    // refreshTree();
+    treeItems = mutate(treeItems!, TreeOp.child, ref, ctr: Counter());
+    selected = getSelected(treeItems!) ?? (NodeType.rootType, 0);
   }
 
   void addSibling(Ref ref, NodeType nt) {
     Session().addSibling(sessionIndex, ref, nt);
-    // update selectedItemIndex by walking the treemenu TODO: fix
-    final TreeViewItem? it = treeNth(ref, treeItems);
-    if (it != null) selected = (nt, ref.$2 + treeDescendants(it) + 1);
-    refreshTree();
+    treeItems = mutate(treeItems!, TreeOp.sibling, ref, ctr: Counter());
+    selected = getSelected(treeItems!) ?? (NodeType.rootType, 0);
   }
 
   void moveUp(Ref ref) {
     Session().moveUp(sessionIndex, ref);
-    refreshTree();
+    treeItems = mutate(treeItems!, TreeOp.up, ref, ctr: Counter(selected));
   }
 
   void moveDown(Ref ref) {
     Session().moveDown(sessionIndex, ref);
-    refreshTree();
+    treeItems = mutate(treeItems!, TreeOp.down, ref, ctr: Counter(selected));
   }
 }
 

@@ -1,8 +1,7 @@
 import 'package:xml/xml.dart';
-import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'node.dart' show NodeType, nodeFromString;
-import 'tree.dart' show makeItem, Counter, Ref;
+import 'tree.dart' show TreeNode, Counter, Ref;
 
 const String _template = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -46,13 +45,12 @@ class Session {
     return _init(doc);
   }
 
-  List<TreeViewItem> tree(int index, Counter ctr) {
+  List<TreeNode> tree(int index, Counter ctr) {
     ctr.next(NodeType.rootType);
-    List<TreeViewItem> ret = [
-      makeItem((NodeType.rootType, 0), ctr.isSelected(), null, "Details", []),
-      makeItem(
+    List<TreeNode> ret = [
+      TreeNode((NodeType.rootType, 0), null, "Details", []),
+      TreeNode(
         (NodeType.none, 0),
-        false,
         null,
         "Context",
         _addContext(documents[index].rootElement, ctr),
@@ -97,22 +95,26 @@ class Session {
     );
   }
 
-  void moveUp(int index, Ref ref) {
+  bool moveUp(int index, Ref ref) {
     XmlElement? el = _nth(documents[index], ref);
-    if (el == null) return;
+    if (el == null) return false;
     XmlElement? prev = el.previousElementSibling;
-    if (prev == null || !ref.$1.like(nodeFromString(prev.localName))) return;
+    if (prev == null || !ref.$1.like(nodeFromString(prev.localName)))
+      return false;
     el.remove();
     prev.parentElement!.children.insert(_pos(prev), el);
+    return true;
   }
 
-  void moveDown(int index, Ref ref) {
+  bool moveDown(int index, Ref ref) {
     XmlElement? el = _nth(documents[index], ref);
-    if (el == null) return;
+    if (el == null) return false;
     XmlElement? next = el.nextElementSibling;
-    if (next == null || !ref.$1.like(nodeFromString(next.localName))) return;
+    if (next == null || !ref.$1.like(nodeFromString(next.localName)))
+      return false;
     el.remove();
     next.parentElement!.children.insert(_pos(next) + 1, el);
+    return true;
   }
 
   // find the index of the sibling node within its parent by counting previous siblings
@@ -346,13 +348,11 @@ class Session {
   }
 }
 
-List<TreeViewItem> _addContext(XmlElement root, Counter ctr) {
+List<TreeNode> _addContext(XmlElement root, Counter ctr) {
   return root.findElements("Context").map((item) {
     final int index = ctr.next(NodeType.contextType);
-    final bool selected = ctr.isSelected();
-    return makeItem(
+    return TreeNode(
       (NodeType.contextType, index),
-      selected,
       null,
       item.getElement("ContextTitle")?.innerText,
       [],
@@ -360,16 +360,14 @@ List<TreeViewItem> _addContext(XmlElement root, Counter ctr) {
   }).toList();
 }
 
-List<TreeViewItem> _addChildren(List<XmlElement> list, Counter ctr) {
+List<TreeNode> _addChildren(List<XmlElement> list, Counter ctr) {
   return list.map((item) {
     final NodeType nt = (item.name.local == 'Term')
         ? NodeType.termType
         : NodeType.classType;
     final int index = ctr.next(nt);
-    final bool selected = ctr.isSelected();
-    return makeItem(
+    return TreeNode(
       (nt, index),
-      selected,
       item.getAttribute("itemno"),
       nt == NodeType.termType
           ? item.getAttribute('TermTitle')

@@ -4,6 +4,29 @@ import 'node.dart' show NodeType;
 
 typedef Ref = (NodeType, int);
 
+enum TreeOp { drop, child, sibling, up, down }
+
+class TreeNode {
+  Ref ref = (NodeType.none, 0);
+  String? itemno;
+  String? title;
+  List<TreeNode>? children;
+
+  TreeNode(this.ref, this.itemno, this.title, this.children);
+
+  bool equals(TreeNode n) {
+    if (ref != n.ref) return false;
+    if (itemno != n.itemno) return false;
+    if (title != n.title) return false;
+    if (children?.length != n.children?.length) return false;
+    if (children == null && n.children == null) return true;
+    for (int i = 0; i < children!.length; i++) {
+      if (!children![i].equals(n.children![i])) return false;
+    }
+    return true;
+  }
+}
+
 class Counter {
   int count = -1;
   NodeType thisNt = NodeType.rootType;
@@ -23,14 +46,23 @@ class Counter {
   }
 }
 
-enum TreeOp { drop, child, sibling, up, down }
+List<TreeViewItem> treeFrom(List<TreeNode> nodes) {
+  return List<TreeViewItem>.generate(
+    nodes.length,
+    (int i) => makeItem(
+      nodes[i].ref,
+      nodes[i].itemno,
+      nodes[i].title,
+      nodes[i].children,
+    ),
+  );
+}
 
 TreeViewItem makeItem(
   Ref ref,
-  bool selected,
   String? itemno,
   String? title,
-  List<TreeViewItem> list,
+  List<TreeNode>? list,
 ) {
   final label = (itemno == null && title == null)
       ? null
@@ -48,9 +80,17 @@ TreeViewItem makeItem(
     },
     content: (label == null) ? SizedBox() : Text(label),
     value: ref,
-    selected: selected,
-    children: list,
+    children: (list == null) ? [] : treeFrom(list),
   );
+}
+
+Ref? getSelected(List<TreeViewItem>? list) {
+  if (list == null) return null;
+  for (final element in list) {
+    if (element.selected ?? false) return element.value;
+    final cref = getSelected(element.children);
+    if (cref != null) return cref;
+  }
 }
 
 TreeViewItem? treeNth(Ref ref, List<TreeViewItem>? list) {
@@ -114,6 +154,107 @@ TreeViewItem _copyItemWithChildren(
   );
 }
 
+TreeViewItem Function(int i) _moveGenerator(
+  List<TreeViewItem> old,
+  Ref ref,
+  Counter ctr,
+  bool up,
+) {
+  return (int i) {
+    if (up) {
+      if (old[i].value.ref.$1.like(ref.$1)) {
+        if (up && i < old.length - 1 && old[i].value.ref == ref) {
+          i++;
+        } else if (old[i].value.ref == ref) {
+          if (up) {
+            if (i > 0) i--;
+          } else {
+            if (i < old.length - 1) i++;
+          }
+        } else if (!up && i > 0 && old[i - 1].value.ref == ref) {
+          i--;
+        }
+      }
+    }
+    int index = ctr.next(old[i].value.$1);
+    bool selected = ctr.isSelected();
+    return _copyItemWithChildren(
+      old[i],
+      List.generate(
+        old[i].children.length,
+        _moveGenerator(old[i].children, ref, ctr, up),
+      ),
+      index: index,
+      selected: selected,
+    );
+  };
+}
+
+TreeViewItem Function(int i) _siblingGenerator(
+  List<TreeViewItem> old,
+  Ref ref,
+  Counter ctr,
+  NodeType nt,
+) {
+  bool next = false;
+  bool decrement = false;
+
+  return (int i) {
+    if (next) {
+      next = false;
+      decrement = true;
+      final ti = makeItem((nt, ctr.next(nt)), null, null, []);
+      ti.selected = true;
+      return ti;
+    }
+    if (decrement) {
+      i--;
+    } else if (old[i].value == ref) {
+      next = true;
+    }
+    int index = ctr.next(old[i].value.$1);
+    return _copyItemWithChildren(
+      old[i],
+      List.generate(
+        _treeContains(old[i].children, ref)
+            ? old[i].children.length + 1
+            : old[i].children.length,
+        _siblingGenerator(old[i].children, ref, ctr, nt),
+      ),
+      index: index,
+      selected: false,
+    );
+  };
+}
+
+TreeViewItem Function(int i) _childGenerator(
+  List<TreeViewItem> old,
+  Ref ref,
+  Counter ctr,
+  NodeType nt,
+) {
+  return (int i) {
+    // add child as the last sibling
+    if (i == old.length) {
+      final ti = makeItem((nt, ctr.next(nt)), null, null, []);
+      ti.selected = true;
+      return ti;
+    }
+    int index = ctr.next(old[i].value.$1);
+    return _copyItemWithChildren(
+      old[i],
+      List.generate(
+        (old[1].value == ref)
+            ? old[i].children.length + 1
+            : old[i].children.length,
+        _childGenerator(old[i].children, ref, ctr, nt),
+      ),
+      index: index,
+      selected: false,
+    );
+  };
+}
+
 TreeViewItem Function(int i) _dropGenerator(
   List<TreeViewItem> old,
   Ref ref,
@@ -149,21 +290,27 @@ List<TreeViewItem> mutate(
   NodeType? nt,
   String? itemno,
   String? title,
+  TreeNode? node, // for copy/paste
 }) {
-  return List.generate(
-    _treeContains(old, ref) ? old.length - 1 : old.length,
-    _dropGenerator(old, ref, ctr!),
-  );
-}
-
-bool treesEqual(List<TreeViewItem> a, List<TreeViewItem> b) {
-  if (a.length != b.length) return false;
-  for (final ea in a) {
-    for (final eb in b) {
-      if (ea.value != eb.value) return false;
-      if (ea.selected != eb.selected) return false;
-      if (!(treesEqual(ea.children, eb.children))) return false;
-    }
+  switch (op) {
+    case TreeOp.sibling:
+      return List.generate(
+        _treeContains(old, ref) ? old.length + 1 : old.length,
+        _siblingGenerator(old, ref, ctr!, nt!),
+      );
+    case TreeOp.child:
+      return List.generate(
+        (ref.$1 == NodeType.contextType) ? old.length + 1 : old.length,
+        _childGenerator(old, ref, ctr!, nt!),
+      );
+    case TreeOp.up:
+      return List.generate(old.length, _moveGenerator(old, ref, ctr!, true));
+    case TreeOp.down:
+      return List.generate(old.length, _moveGenerator(old, ref, ctr!, false));
+    default:
+      return List.generate(
+        _treeContains(old, ref) ? old.length - 1 : old.length,
+        _dropGenerator(old, ref, ctr!),
+      );
   }
-  return true;
 }
