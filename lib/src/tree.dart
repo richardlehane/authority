@@ -137,6 +137,7 @@ TreeViewItem _copyItemWithChildren(
   List<TreeViewItem> list, {
   int? index,
   bool? selected,
+  bool expand = false,
 }) {
   return TreeViewItem(
     leading: switch (old.value.$1) {
@@ -150,7 +151,7 @@ TreeViewItem _copyItemWithChildren(
         : SizedBox(),
     value: (index == null) ? old.value : (old.value.$1, index),
     selected: (selected == null) ? old.selected : selected,
-    expanded: old.expanded,
+    expanded: (expand) ? true : old.expanded,
     children: list,
   );
 }
@@ -252,6 +253,7 @@ TreeViewItem Function(int i) _childGenerator(
       ),
       index: index,
       selected: false,
+      expand: (old[i].value == ref),
     );
   };
 }
