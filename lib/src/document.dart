@@ -90,13 +90,13 @@ class Document {
     // final TreeViewItem? it = treeNth(ref, treeItems);
     // if (it != null) selected = (nt, ref.$2 + treeDescendants(it) + 1);
     // refreshTree();
-    treeItems = mutate(treeItems!, TreeOp.child, ref, ctr: Counter());
+    treeItems = mutate(treeItems!, TreeOp.child, ref, ctr: Counter(), nt: nt);
     selected = getSelected(treeItems!) ?? (NodeType.rootType, 0);
   }
 
   void addSibling(Ref ref, NodeType nt) {
     Session().addSibling(sessionIndex, ref, nt);
-    treeItems = mutate(treeItems!, TreeOp.sibling, ref, ctr: Counter());
+    treeItems = mutate(treeItems!, TreeOp.sibling, ref, ctr: Counter(), nt: nt);
     selected = getSelected(treeItems!) ?? (NodeType.rootType, 0);
   }
 
