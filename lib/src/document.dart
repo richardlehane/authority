@@ -71,6 +71,7 @@ class Document {
   }
 
   void setCurrent(Ref ref) {
+    selected = ref;
     Session().setCurrent(sessionIndex, ref);
   }
 
@@ -86,18 +87,14 @@ class Document {
 
   void addChild(Ref ref, NodeType nt) {
     Session().addChild(sessionIndex, ref, nt);
-    // update selectedItemIndex by walking the treemenu TODO: fix
-    // final TreeViewItem? it = treeNth(ref, treeItems);
-    // if (it != null) selected = (nt, ref.$2 + treeDescendants(it) + 1);
-    // refreshTree();
     treeItems = mutate(treeItems!, TreeOp.child, ref, ctr: Counter(), nt: nt);
-    selected = getSelected(treeItems!) ?? (NodeType.rootType, 0);
+    setCurrent(getSelected(treeItems!) ?? (NodeType.rootType, 0));
   }
 
   void addSibling(Ref ref, NodeType nt) {
     Session().addSibling(sessionIndex, ref, nt);
     treeItems = mutate(treeItems!, TreeOp.sibling, ref, ctr: Counter(), nt: nt);
-    selected = getSelected(treeItems!) ?? (NodeType.rootType, 0);
+    setCurrent(getSelected(treeItems!) ?? (NodeType.rootType, 0));
   }
 
   void moveUp(Ref ref) {
@@ -108,14 +105,5 @@ class Document {
   void moveDown(Ref ref) {
     Session().moveDown(sessionIndex, ref);
     treeItems = mutate(treeItems!, TreeOp.down, ref, ctr: Counter(selected));
-  }
-}
-
-// todo: make this a reset, that sets selected to false for all but the current selection & renumbers the nodes.
-void clearSelected(List<TreeViewItem>? list) {
-  if (list == null) return;
-  for (final element in list) {
-    element.selected = false;
-    clearSelected(element.children);
   }
 }
