@@ -131,4 +131,8 @@ class CurrentNode with Render {
     int fidx,
     String? val,
   ) {} //todo
+
+  void fieldsAdd(String name, int idx, String sub) {
+    return Session().fieldsAdd(session, name, idx, sub);
+  }
 }

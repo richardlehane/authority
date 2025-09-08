@@ -355,6 +355,14 @@ class Session {
     el = el.findElements(sub).elementAt(fidx);
     return el.innerText.isEmpty ? null : el.innerText;
   }
+
+  void fieldsAdd(int index, String name, int idx, String sub) {
+    XmlElement? el = nodes[index];
+    if (el == null) return null;
+    el = el.findElements(name).elementAt(idx);
+    // todo: insert in right spot
+    return;
+  }
 }
 
 List<TreeNode> _addContext(XmlElement root, Counter ctr) {
