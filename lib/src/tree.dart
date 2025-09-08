@@ -164,16 +164,16 @@ TreeViewItem Function(int i) _moveGenerator(
 ) {
   return (int i) {
     if (up) {
-      if (old[i].value.ref.$1.like(ref.$1)) {
-        if (up && i < old.length - 1 && old[i].value.ref == ref) {
+      if (old[i].value.$1.like(ref.$1)) {
+        if (up && i < old.length - 1 && old[i].value == ref) {
           i++;
-        } else if (old[i].value.ref == ref) {
+        } else if (old[i].value == ref) {
           if (up) {
             if (i > 0) i--;
           } else {
             if (i < old.length - 1) i++;
           }
-        } else if (!up && i > 0 && old[i - 1].value.ref == ref) {
+        } else if (!up && i > 0 && old[i - 1].value == ref) {
           i--;
         }
       }

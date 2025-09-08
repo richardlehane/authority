@@ -52,8 +52,6 @@ NodeType nodeFromString(String name) {
   return NodeType.rootType;
 }
 
-bool _isAttr(String name) => name[0] == name[0].toLowerCase();
-
 class CurrentNode with Render {
   int session;
   Ref ref;
@@ -64,17 +62,11 @@ class CurrentNode with Render {
   }
 
   String? get(String name) {
-    if (_isAttr(name)) {
-      return Session().getAttribute(session, name);
-    }
-    return Session().getElement(session, name);
+    return Session().get(session, name);
   }
 
   void set(String name, String? value) {
-    if (_isAttr(name)) {
-      return Session().setAttribute(session, name, value);
-    }
-    return Session().setElement(session, name, value);
+    return Session().set(session, name, value);
   }
 
   List<XmlElement>? getParagraphs(String name) {
@@ -125,11 +117,11 @@ class CurrentNode with Render {
   // todo
   // these are for repeating elements within multi element e.g. TermReference in SeeReference
   int fieldsLen(String name, int idx, String sub) {
-    return 0; //todo
+    return Session().fieldsLen(session, name, idx, sub);
   }
 
-  String? fieldsGet(String name, int idx, String? sub, int fidx) {
-    return null; // todo
+  String? fieldsGet(String name, int idx, String sub, int fidx) {
+    return Session().fieldsGet(session, name, idx, sub, fidx);
   }
 
   void fieldsSet(

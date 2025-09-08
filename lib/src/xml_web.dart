@@ -16,6 +16,8 @@ const String _template = '''
 
 const String _ns = "http://www.records.nsw.gov.au/schemas/RDA";
 
+bool _isAttr(String name) => name[0] == name[0].toLowerCase();
+
 class Session {
   List<XmlDocument> documents = [];
   List<XmlElement?> nodes = [];
@@ -127,8 +129,6 @@ class Session {
     return ret;
   }
 
-  // todo: move up/ move down
-
   // node operations
   NodeType getType(int index) {
     XmlElement? el = nodes[index];
@@ -136,23 +136,24 @@ class Session {
     return nodeFromString(el.localName);
   }
 
-  String? getElement(int index, String name) {
+  String? get(int index, String name) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
+    if (_isAttr(name)) {
+      String? a = el.getAttribute(name, namespace: _ns);
+      return (a != null) ? a : null;
+    }
     XmlElement? t = el.getElement(name);
     return (t != null) ? t.innerText : null;
   }
 
-  String? getAttribute(int index, String name) {
-    XmlElement? el = nodes[index];
-    if (el == null) return null;
-    String? a = el.getAttribute(name, namespace: _ns);
-    return (a != null) ? a : null;
-  }
-
-  void setElement(int index, String name, String? value) {
+  void set(int index, String name, String? value) {
     XmlElement? el = nodes[index];
     if (el == null) return;
+    if (_isAttr(name)) {
+      el.setAttribute(name, value, namespace: _ns);
+      return;
+    }
     XmlElement? t = el.getElement(name);
     // delete
     if (value == null) {
@@ -168,13 +169,6 @@ class Session {
     t = XmlElement(XmlName(name), [], [XmlText(value)], false);
     (int, int) p = _insertPos(el, name);
     el.children.insert(p.$1, t);
-    return;
-  }
-
-  void setAttribute(int index, String name, String? value) {
-    XmlElement? el = nodes[index];
-    if (el == null) return;
-    el.setAttribute(name, value, namespace: _ns);
     return;
   }
 
@@ -345,6 +339,21 @@ class Session {
       return;
     }
     el.children.insertAll(0, val); // update
+  }
+
+  int fieldsLen(int index, String name, int idx, String sub) {
+    XmlElement? el = nodes[index];
+    if (el == null) return 0;
+    el = el.findElements(name).elementAt(idx);
+    return el.findElements(sub).length;
+  }
+
+  String? fieldsGet(int index, String name, int idx, String sub, int fidx) {
+    XmlElement? el = nodes[index];
+    if (el == null) return null;
+    el = el.findElements(name).elementAt(idx);
+    el = el.findElements(sub).elementAt(fidx);
+    return el.innerText.isEmpty ? null : el.innerText;
   }
 }
 
