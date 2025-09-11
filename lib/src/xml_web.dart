@@ -485,6 +485,23 @@ const disposalElements = [
   "CustomCustody",
 ];
 
+const supersedeElements = [
+  "IDRef",
+  "AuthorityTitleRef",
+  "TermTitleRef", // multiple
+  "ItemNoRef",
+  "PartText",
+  "Date",
+];
+
+const seeRefElements = [
+  "IDRef",
+  "AuthorityTitleRef",
+  "TermTitleRef",
+  "ItemNoRef",
+  "SeeText",
+];
+
 // determine where to insert a new element
 (int, int) _insertPos(XmlElement el, String name) {
   int pos = 0;

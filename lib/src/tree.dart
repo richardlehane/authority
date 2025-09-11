@@ -1,10 +1,10 @@
 import 'package:fluent_ui/fluent_ui.dart'
-    show FluentIcons, Icon, SizedBox, Text, TreeViewItem;
+    show Widget, FluentIcons, Icon, SizedBox, Text, TreeViewItem;
 import 'node.dart' show NodeType;
 
 typedef Ref = (NodeType, int);
 
-enum TreeOp { drop, child, sibling, up, down }
+enum TreeOp { drop, child, sibling, up, down, relabel }
 
 class TreeNode {
   Ref ref = (NodeType.none, 0);
@@ -58,12 +58,7 @@ List<TreeViewItem> treeFrom(List<TreeNode> nodes) {
   );
 }
 
-TreeViewItem makeItem(
-  Ref ref,
-  String? itemno,
-  String? title,
-  List<TreeNode>? list,
-) {
+Widget makeLabel(String? itemno, String? title) {
   final label = (itemno == null && title == null)
       ? null
       : (itemno == null)
@@ -71,6 +66,15 @@ TreeViewItem makeItem(
       : (title == null)
       ? itemno
       : "$itemno ${title}";
+  return (label == null) ? SizedBox() : Text(label);
+}
+
+TreeViewItem makeItem(
+  Ref ref,
+  String? itemno,
+  String? title,
+  List<TreeNode>? list,
+) {
   return TreeViewItem(
     leading: switch (ref.$1) {
       NodeType.termType => Icon(FluentIcons.fabric_folder),
@@ -78,7 +82,7 @@ TreeViewItem makeItem(
       NodeType.contextType => Icon(FluentIcons.page_list),
       _ => null,
     },
-    content: (label == null) ? SizedBox() : Text(label),
+    content: makeLabel(itemno, title),
     value: ref,
     children: (list == null) ? [] : treeFrom(list),
   );
@@ -284,6 +288,36 @@ TreeViewItem Function(int i) _dropGenerator(
   };
 }
 
+TreeViewItem Function(int i) _relabelGenerator(
+  List<TreeViewItem> old,
+  Ref ref,
+  String? itemno,
+  String? title,
+) {
+  return (int i) {
+    return TreeViewItem(
+      leading: switch (old[i].value.$1) {
+        NodeType.termType => Icon(FluentIcons.fabric_folder),
+        NodeType.classType => Icon(FluentIcons.page),
+        NodeType.contextType => Icon(FluentIcons.page_list),
+        _ => null,
+      },
+      content: (old[i].value == ref)
+          ? makeLabel(itemno, title)
+          : (old[i].content is Text)
+          ? Text((old[i].content as Text).data!)
+          : SizedBox(),
+      value: old[i].value,
+      selected: old[i].selected,
+      expanded: old[i].expanded,
+      children: List.generate(
+        old[i].children.length,
+        _relabelGenerator(old[i].children, ref, itemno, title),
+      ),
+    );
+  };
+}
+
 // to do: implement!
 List<TreeViewItem> mutate(
   List<TreeViewItem> old,
@@ -307,6 +341,11 @@ List<TreeViewItem> mutate(
       return List.generate(old.length, _moveGenerator(old, ref, ctr!, true));
     case TreeOp.down:
       return List.generate(old.length, _moveGenerator(old, ref, ctr!, false));
+    case TreeOp.relabel:
+      return List.generate(
+        old.length,
+        _relabelGenerator(old, ref, itemno, title),
+      );
     default:
       return List.generate(
         _treeContains(old, ref) ? old.length - 1 : old.length,

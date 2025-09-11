@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:fluent_ui/fluent_ui.dart' show TreeViewItem;
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'xml_web.dart' show Session;
@@ -24,6 +26,7 @@ class Document {
   String? path;
   List<TreeViewItem>? treeItems;
   int sessionIndex;
+  int mutation;
   Ref selected;
   View view = View.edit;
 
@@ -32,6 +35,7 @@ class Document {
     this.path = null,
     this.treeItems,
     this.sessionIndex = 0,
+    this.mutation = 0,
     this.selected = (NodeType.rootType, 0),
   });
 
@@ -51,7 +55,7 @@ class Document {
     final sessionIndex = sess.load(f);
     return Document(
       title: f.name,
-      // path: f.path, ???
+      path: f.path,
       treeItems: treeFrom(sess.tree(sessionIndex, Counter())),
       sessionIndex: sessionIndex,
     );
@@ -62,12 +66,24 @@ class Document {
     return Session().asString(sessionIndex);
   }
 
+  Future<File> save() {
+    if (path == null) {
+      throw Exception("no path!");
+    }
+    return File(path!).writeAsString(toString(), flush: true);
+  }
+
+  Future<File> saveAs(String p) {
+    path = p;
+    return save();
+  }
+
   void refreshTree() {
     treeItems = treeFrom(Session().tree(sessionIndex, Counter(selected)));
   }
 
   CurrentNode current() {
-    return CurrentNode(sessionIndex, selected);
+    return CurrentNode(sessionIndex, mutation, selected);
   }
 
   void setCurrent(Ref ref) {
@@ -83,6 +99,7 @@ class Document {
               : (ref.$1, 0)
         : (ref.$1, ref.$2 - 1);
     treeItems = mutate(treeItems!, TreeOp.drop, ref, ctr: Counter(selected));
+    mutation++;
   }
 
   void addChild(Ref ref, NodeType nt) {
@@ -94,22 +111,36 @@ class Document {
       ctr: Counter(),
       nt: nt,
     );
+    mutation++;
     setCurrent(getSelected(treeItems!) ?? (NodeType.rootType, 0));
   }
 
   void addSibling(Ref ref, NodeType nt) {
     Session().addSibling(sessionIndex, ref, nt);
     treeItems = mutate(treeItems!, TreeOp.sibling, ref, ctr: Counter(), nt: nt);
+    mutation++;
     setCurrent(getSelected(treeItems!) ?? (NodeType.rootType, 0));
   }
 
   void moveUp(Ref ref) {
     Session().moveUp(sessionIndex, ref);
     treeItems = mutate(treeItems!, TreeOp.up, ref, ctr: Counter(selected));
+    mutation++;
   }
 
   void moveDown(Ref ref) {
     Session().moveDown(sessionIndex, ref);
     treeItems = mutate(treeItems!, TreeOp.down, ref, ctr: Counter(selected));
+    mutation++;
+  }
+
+  void relabel(Ref ref, String? itemno, String? title) {
+    treeItems = mutate(
+      treeItems!,
+      TreeOp.relabel,
+      ref,
+      itemno: itemno,
+      title: title,
+    );
   }
 }

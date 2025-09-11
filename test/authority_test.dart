@@ -10,6 +10,10 @@ void main() {
     doc.setCurrent((NodeType.classType, 2));
     expect(doc.current().typ(), NodeType.classType);
   });
+
+  test('key', () {
+    expect(doc.current().key(), 12884901890);
+  });
   test('update attribute', () {
     CurrentNode curr = doc.current();
     curr.set("itemno", "5.0.1");

@@ -26,6 +26,21 @@ enum NodeType {
     }
   }
 
+  int toInt() {
+    switch (this) {
+      case NodeType.rootType:
+        return 1;
+      case NodeType.contextType:
+        return 2;
+      case NodeType.classType:
+        return 3;
+      case NodeType.termType:
+        return 4;
+      case NodeType.none:
+        return 0;
+    }
+  }
+
   bool like(NodeType nt) {
     switch (this) {
       case NodeType.termType:
@@ -54,11 +69,19 @@ NodeType nodeFromString(String name) {
 
 class CurrentNode with Render {
   int session;
+  int mutation;
   Ref ref;
-  CurrentNode(this.session, this.ref);
+  CurrentNode(this.session, this.mutation, this.ref);
 
   NodeType typ() {
     return Session().getType(session);
+  }
+
+  int key() {
+    return this.session << 56 |
+        this.mutation << 40 |
+        this.ref.$1.toInt() << 32 |
+        this.ref.$2;
   }
 
   String? get(String name) {
