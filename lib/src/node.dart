@@ -100,21 +100,30 @@ class CurrentNode with Render {
     return Session().setParagraphs(session, name, paras);
   }
 
+  // Count multi elements
+  // Name is either enclosing name "Status"
+  // Or element name "SeeReference"
   int multiLen(String name) {
     return Session().multiLen(session, name);
   }
 
+  // Add multi element
+  // If sub provided, it goes into enclosing element e.g. Status > Issued
   int multiAdd(String name, String? sub) {
     return Session().multiAdd(session, name, sub);
   }
 
-  void multiDrop(String name, int idx) {} // todo
+  // Drop either the nth element with name, or the nth element within name
+  void multiDrop(String name, int idx) {
+    return Session().multiDrop(session, name, idx);
+  } // todo
 
+  // Move up either the nth element with name, or the nth element within name
   void multiUp(String name, int idx) {} // todo
 
   void multiDown(String name, int idx) {} // todo
 
-  // todo: set attribute
+  // For the nth element or nth element within name, set its value if sub null, or set subs value
   void multiSet(String name, int idx, String? sub, String? val) {
     return Session().multiSet(session, name, idx, sub, val);
   }
@@ -137,7 +146,7 @@ class CurrentNode with Render {
     return Session().multiSetParagraphs(session, name, idx, sub, val);
   }
 
-  // todo
+  // For the nth element with name, or nth within name, count the number of sub elements with sub
   // these are for repeating elements within multi element e.g. TermReference in SeeReference
   int fieldsLen(String name, int idx, String sub) {
     return Session().fieldsLen(session, name, idx, sub);
@@ -147,13 +156,9 @@ class CurrentNode with Render {
     return Session().fieldsGet(session, name, idx, sub, fidx);
   }
 
-  void fieldsSet(
-    String name,
-    int idx,
-    String? sub,
-    int fidx,
-    String? val,
-  ) {} //todo
+  void fieldsSet(String name, int idx, String sub, int fidx, String? val) {
+    return Session().fieldsSet(session, name, idx, sub, fidx, val);
+  }
 
   void fieldsAdd(String name, int idx, String sub) {
     return Session().fieldsAdd(session, name, idx, sub);

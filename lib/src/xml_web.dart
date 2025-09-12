@@ -209,76 +209,144 @@ class Session {
   int multiLen(int index, String name) {
     XmlElement? el = nodes[index];
     if (el == null) return 0;
-    if (name == "Status") {
-      el = el.getElement("Status");
-      if (el == null) return 0;
-      return el.childElements.length;
-    }
-    if (name == "SeeReference") {
-      el = (el.name.local == "Term")
-          ? el.getElement("TermDescription")
-          : el.getElement("ClassDescription");
-      if (el == null) return 0;
-    }
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return 0;
+    if (mt == _MultiType.status) return el.childElements.length;
     return el.findElements(name).length;
   }
 
   int multiAdd(int index, String name, String? sub) {
     XmlElement? el = nodes[index];
-    if (el == null) return 0;
-    // todo: special case Status and SeeReference - SeeReference uses the sub parameter
-    XmlElement t = XmlElement(XmlName(name), [], [], false);
+    if (el == null) return -1;
+    final mt = fromName(name);
+    XmlElement t = XmlElement(XmlName(sub ?? name), [], [], false);
+    if (mt == _MultiType.status) {
+      el = mt.parent(el);
+      if (sub == null) return -1;
+      if (el == null) {
+        (int, int) p = _insertPos(nodes[index]!, "Status");
+        XmlElement s = XmlElement(XmlName("Status"), [], [t], false);
+        nodes[index]!.children.insert(p.$1, s);
+        return 0;
+      }
+      el.children.add(t);
+      return el.childElements.length - 1;
+    }
+    if (mt == _MultiType.para) {
+      el = mt.parent(el);
+      if (el == null) return -1;
+      el.children.add(t);
+      return el.childElements.where((e) => e.localName == name).length - 1;
+    }
     (int, int) p = _insertPos(el, name);
     el.children.insert(p.$1, t);
-    return p.$2; // todo
+    return p.$2;
+  }
+
+  void multiDrop(int index, String name, int idx) {
+    XmlElement? el = nodes[index];
+    if (el == null) return;
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return;
+    if (mt == _MultiType.status) {
+      el.childElements.elementAt(idx).remove();
+      if (el.childElements.length == 0) el.remove(); // remove Status if empty
+      return;
+    }
+    el = el.findElements(name).elementAt(idx);
+    el.remove();
+  }
+
+  void multiUp(int index, String name, int idx) {
+    XmlElement? el = nodes[index];
+    if (el == null) return;
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
+    XmlElement? prev = el.previousElementSibling;
+    if (prev == null || (mt != _MultiType.status && prev.localName != name))
+      return;
+    el.remove();
+    prev.parentElement!.children.insert(_pos(prev), el);
+  }
+
+  void multiDown(int index, String name, int idx) {
+    XmlElement? el = nodes[index];
+    if (el == null) return;
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
+    XmlElement? next = el.nextElementSibling;
+    if (next == null || (mt != _MultiType.status && next.localName != name))
+      return;
+    el.remove();
+    next.parentElement!.children.insert(_pos(next) + 1, el);
   }
 
   void multiSet(int index, String name, int idx, String? sub, String? val) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    // todo: Status and SeeReference
-    el = el.findElements(name).elementAt(idx);
-    if (sub == "unit") {
-      XmlElement? t = el.getElement("RetentionPeriod");
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
+    if (sub == null) {
+      if (val == null) return;
+      el.innerText = val;
+      return;
+    }
+    if (_isAttr(sub)) {
+      final en = elementName(sub);
+      XmlElement? t = el.getElement(en);
       String? a = (val == "") ? null : val;
       if (t == null) {
-        t = XmlElement(XmlName("RetentionPeriod"), [], [], false);
-        (int, int) p = _insertPos(el, "RetentionPeriod");
+        t = XmlElement(XmlName(en), [], [], false);
+        (int, int) p = _insertPos(el, en);
         el.children.insert(p.$1, t);
       }
-      t.setAttribute("unit", a, namespace: _ns);
+      t.setAttribute(sub, a, namespace: _ns);
       return;
     }
-    if (sub != null) {
-      XmlElement? t = el.getElement(sub);
-      // delete
-      if (val == null) {
-        if (t != null) el.children.remove(t);
-        return;
-      }
-      // update
-      if (t != null) {
-        t.innerText = val;
-        return;
-      }
-      // insert
-      t = XmlElement(XmlName(sub), [], [XmlText(val)], false);
-      (int, int) p = _insertPos(el, sub);
-      el.children.insert(p.$1, t);
+    XmlElement? t = el.getElement(sub);
+    // delete
+    if (val == null) {
+      if (t != null) el.children.remove(t);
       return;
     }
-    if (val == null) return; // can't drop multi with null value
-    el.innerText = val;
+    // update
+    if (t != null) {
+      t.innerText = val;
+      return;
+    }
+    // insert
+    t = XmlElement(XmlName(sub), [], [XmlText(val)], false);
+    (int, int) p = _insertPos(el, sub);
+    el.children.insert(p.$1, t);
     return;
   }
 
   String? multiGet(int index, String name, int idx, String? sub) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    el = el.findElements(name).elementAt(idx);
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return null;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
     if (sub == null) return el.innerText; // handle simple case - e.g. LinkedTo
-    if (sub == "unit") {
-      XmlElement? t = el.getElement("RetentionPeriod");
+    if (_isAttr(sub)) {
+      XmlElement? t = el.getElement(elementName(sub));
       if (t == null) return null;
       String? a = t.getAttribute(sub, namespace: _ns);
       return (a != null) ? a : null;
@@ -296,7 +364,12 @@ class Session {
   ) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    el = el.findElements(name).elementAt(idx);
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return null;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
     if (sub != null) {
       el = el.getElement(sub);
       if (el == null) return null;
@@ -315,7 +388,12 @@ class Session {
   ) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    el = el.findElements(name).elementAt(idx);
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return null;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
     XmlElement parent = el;
     if (sub != null) {
       el = el.getElement(sub);
@@ -344,23 +422,64 @@ class Session {
   int fieldsLen(int index, String name, int idx, String sub) {
     XmlElement? el = nodes[index];
     if (el == null) return 0;
-    el = el.findElements(name).elementAt(idx);
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return 0;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
     return el.findElements(sub).length;
   }
 
   String? fieldsGet(int index, String name, int idx, String sub, int fidx) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    el = el.findElements(name).elementAt(idx);
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return null;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
     el = el.findElements(sub).elementAt(fidx);
     return el.innerText.isEmpty ? null : el.innerText;
+  }
+
+  void fieldsSet(
+    int index,
+    String name,
+    int idx,
+    String sub,
+    int fidx,
+    String? val,
+  ) {
+    XmlElement? el = nodes[index];
+    if (el == null) return null;
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return null;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
+    el = el.findElements(sub).elementAt(fidx);
+    if (val == null) {
+      el.remove();
+      return;
+    }
+    el.innerText = val;
   }
 
   void fieldsAdd(int index, String name, int idx, String sub) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    el = el.findElements(name).elementAt(idx);
-    // todo: insert in right spot
+    final mt = fromName(name);
+    el = mt.parent(el);
+    if (el == null) return null;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
+    XmlElement e = XmlElement(XmlName(sub), [], [], false);
+    (int, int) p = _insertPos(el, sub);
+    el.children.insert(p.$1, e);
     return;
   }
 }
@@ -512,6 +631,11 @@ const seeRefElements = [
     "Term" => termElements,
     "Class" => classElements,
     "Disposal" => disposalElements,
+    "PartSupersedes" ||
+    "Supersedes" ||
+    "PartSupersededBy" ||
+    "SupersededBy" => supersedeElements,
+    "SeeReference" => seeRefElements,
     _ => [],
   };
   prev = prev.sublist(0, prev.indexOf(name) + 1);
@@ -528,4 +652,48 @@ const seeRefElements = [
     break;
   }
   return (pos, multi);
+}
+
+enum _MultiType {
+  node,
+  para,
+  status;
+
+  XmlElement? parent(XmlElement el) {
+    switch (this) {
+      case _MultiType.node:
+        return el;
+      case _MultiType.para:
+        switch (el.localName) {
+          case "Context":
+            return el.getElement("ContextContent");
+          case "Term":
+            return el.getElement("TermDescription");
+          default:
+            return el.getElement("ClassDescription");
+        }
+      case _MultiType.status:
+        return el.getElement("Status");
+    }
+  }
+}
+
+_MultiType fromName(String name) {
+  switch (name) {
+    case "Status":
+      return _MultiType.status;
+    case "SeeReference" || "Source":
+      return _MultiType.para;
+    default:
+      return _MultiType.node;
+  }
+}
+
+String elementName(String attr) {
+  switch (attr) {
+    case "unit":
+      return "RetentionPeriod";
+    default:
+      return "";
+  }
 }
