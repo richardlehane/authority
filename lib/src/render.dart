@@ -7,9 +7,8 @@ mixin Render {
   String? multiGet(String name, int idx, String? sub);
   List<XmlElement>? multiGetParagraphs(String name, int idx, String sub);
 
-  (List<TextSpan>, List<TextSpan>) disposal(int index) {
+  List<TextSpan> disposal(int index) {
     List<TextSpan> action = [];
-    List<TextSpan> custody = [];
 
     String? condition = multiGet("Disposal", index, "DisposalCondition");
     String? retentionPeriod = multiGet("Disposal", index, "RetentionPeriod");
@@ -18,11 +17,6 @@ mixin Render {
     String? disposalAction = multiGet("Disposal", index, "DisposalAction");
     String? transferTo = multiGet("Disposal", index, "TransferTo");
     if (transferTo != null) transferTo = " to ${transferTo}";
-    List<XmlElement>? customCustody = multiGetParagraphs(
-      "Disposal",
-      index,
-      "CustomCustody",
-    );
     List<XmlElement>? customAction = multiGetParagraphs(
       "Disposal",
       index,
@@ -46,8 +40,6 @@ mixin Render {
         break;
       case "Required as State archives":
         action.add(_toSpan(0, disposalAction));
-        if (ret.isNotEmpty)
-          custody.add(_toSpan(0, "Retain ${ret}, then transfer"));
       case "Destroy":
         action.add(
           _toSpan(0, (ret.isEmpty) ? "Destroy" : "Retain ${ret}, then destroy"),
@@ -68,15 +60,10 @@ mixin Render {
       if (action.isNotEmpty) action.add(_toSpan(0, "\n"));
       action.addAll(renderParas(customAction));
     }
-    if (customCustody != null) {
-      if (custody.isNotEmpty) custody.add(_toSpan(0, "\n"));
-      custody.addAll(renderParas(customCustody));
-    }
     if (condition != null) {
       action.insert(0, _toSpan(1, "${condition}:\n"));
-      if (custody.isNotEmpty) custody.insert(0, _toSpan(1, "${condition}:\n"));
     }
-    return (action, custody);
+    return action;
   }
 }
 
