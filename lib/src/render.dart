@@ -61,7 +61,7 @@ mixin Render {
       action.addAll(renderParas(customAction));
     }
     if (condition != null) {
-      action.insert(0, _toSpan(1, "${condition}:\n"));
+      action.insert(0, _toSpan(1, "${condition}: "));
     }
     return action;
   }
