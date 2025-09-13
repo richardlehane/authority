@@ -57,11 +57,11 @@ mixin Render {
         action.add(_toSpan(0, disposalAction));
     }
     if (customAction != null) {
-      if (action.isNotEmpty) action.add(_toSpan(0, "\n"));
+      if (action.isNotEmpty) action.add(_toSpan(0, '\n'));
       action.addAll(renderParas(customAction));
     }
     if (condition != null) {
-      action.insert(0, _toSpan(1, "${condition}: "));
+      action.insert(0, _toSpan(1, '${condition}:\n'));
     }
     return action;
   }
