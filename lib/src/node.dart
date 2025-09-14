@@ -107,6 +107,10 @@ class CurrentNode with Render {
     return Session().multiLen(session, name);
   }
 
+  bool multiEmpty(String name, int idx) {
+    return Session().multiEmpty(session, name, idx);
+  }
+
   // Add multi element
   // If sub provided, it goes into enclosing element e.g. Status > Issued
   int multiAdd(String name, String? sub) {

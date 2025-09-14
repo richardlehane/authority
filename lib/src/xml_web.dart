@@ -216,6 +216,15 @@ class Session {
     return el.findElements(name).length;
   }
 
+  bool multiEmpty(int index, String name, int idx) {
+    XmlElement? el = nodes[index];
+    if (el == null) false;
+    final mt = _multypFromName(name);
+    el = mt.parent(el!);
+    if (el == null) return false;
+    return el.children.isEmpty;
+  }
+
   int multiAdd(int index, String name, String? sub) {
     XmlElement? el = nodes[index];
     if (el == null) return -1;
