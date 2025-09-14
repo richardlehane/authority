@@ -28,8 +28,8 @@ mixin Render {
   }
 
   List<TextSpan> source(int index) {
-    String? url = multiGet("LinkedTo", index, "url");
-    String? content = multiGet("LinkedTo", index, null);
+    String? url = multiGet("Source", index, "url");
+    String? content = multiGet("Source", index, null);
     if (url != null && content != null)
       return [
         _toSpan(2, content),
