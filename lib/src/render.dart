@@ -21,8 +21,8 @@ mixin Render {
     String? typ = multiGet("LinkedTo", index, "type");
     String? content = multiGet("LinkedTo", index, null);
     if (typ != null && content != null)
-      return [_toSpan(0, "${typ} ${content}")];
-    if (typ != null) return [_toSpan(0, typ)];
+      return [_toSpan(1, typ), _toSpan(0, ": ${content}")];
+    if (typ != null) return [_toSpan(1, typ)];
     if (content != null) return [_toSpan(0, content)];
     return [];
   }
