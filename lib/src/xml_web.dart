@@ -222,7 +222,9 @@ class Session {
     final mt = _multypFromName(name);
     el = mt.parent(el!);
     if (el == null) return false;
-    print(el.children);
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
     return el.children.isEmpty;
   }
 
