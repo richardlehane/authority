@@ -119,9 +119,13 @@ class CurrentNode with Render {
   } // todo
 
   // Move up either the nth element with name, or the nth element within name
-  void multiUp(String name, int idx) {} // todo
+  void multiUp(String name, int idx) {
+    return Session().multiUp(session, name, idx);
+  } // todo
 
-  void multiDown(String name, int idx) {} // todo
+  void multiDown(String name, int idx) {
+    return Session().multiDown(session, name, idx);
+  } // todo
 
   // For the nth element or nth element within name, set its value if sub null, or set subs value
   void multiSet(String name, int idx, String? sub, String? val) {
