@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:xml/xml.dart';
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'node.dart' show NodeType, nodeFromString;
@@ -43,7 +44,8 @@ class Session {
     if (f.bytes == null) {
       return empty();
     }
-    final doc = XmlDocument.parse(String.fromCharCodes(f.bytes!));
+    final utf16Body = utf8.decode(f.bytes!);
+    final doc = XmlDocument.parse(utf16Body);
     return _init(doc);
   }
 
@@ -638,10 +640,16 @@ const supersedeElements = [
 const seeRefElements = [
   "IDRef",
   "AuthorityTitleRef",
-  "TermTitleRef",
+  "TermTitleRef", // multiple
   "ItemNoRef",
   "SeeText",
 ];
+
+const draftElements = ["Agency", "Date"];
+
+const submittedElements = ["Officer", "Position", "Agency", "Date"];
+
+const applyingElements = ["Agency", "StartDate", "EndDate"];
 
 // determine where to insert a new element
 (int, int) _insertPos(XmlElement el, String name) {
@@ -658,6 +666,9 @@ const seeRefElements = [
     "PartSupersededBy" ||
     "SupersededBy" => supersedeElements,
     "SeeReference" => seeRefElements,
+    "Draft" || "Issued" => draftElements,
+    "Submitted" => submittedElements,
+    "Applying" => applyingElements,
     _ => [],
   };
   prev = prev.sublist(0, prev.indexOf(name) + 1);
