@@ -5,7 +5,17 @@ import 'package:xml/xml.dart'
 
 mixin Render {
   String? multiGet(String name, int idx, String? sub);
-  List<XmlElement>? multiGetParagraphs(String name, int idx, String sub);
+  List<XmlElement>? multiGetParagraphs(String name, int idx, String? sub);
+
+  List<TextSpan> comment(int index) {
+    List<TextSpan> comment = [];
+    String? author = multiGet("Comment", index, "author");
+    List<XmlElement>? content = multiGetParagraphs("Comment", index, null);
+
+    if (author != null) comment.add(_toSpan(1, '${author}: '));
+    if (content != null) comment.addAll(_renderParas(content));
+    return comment;
+  }
 
   List<TextSpan> disposal(int index) {
     List<TextSpan> action = [];
@@ -58,7 +68,7 @@ mixin Render {
     }
     if (customAction != null) {
       if (action.isNotEmpty) action.add(_toSpan(0, '\n'));
-      action.addAll(renderParas(customAction));
+      action.addAll(_renderParas(customAction));
     }
     if (condition != null) {
       action.insert(0, _toSpan(1, '${condition}:\n'));
@@ -68,11 +78,11 @@ mixin Render {
 }
 
 const bullet = "\u2022";
-List<TextSpan> renderParas(List<XmlElement> paragraphs) {
+List<TextSpan> _renderParas(List<XmlElement> paragraphs) {
   StringBuffer buf = StringBuffer();
   List<TextSpan> ret = [];
 
-  int getStyle(XmlNode node) {
+  int _getStyle(XmlNode node) {
     if (node.nodeType != XmlNodeType.ELEMENT) return 0;
     switch ((node as XmlElement).name.local) {
       case "List":
@@ -86,7 +96,7 @@ List<TextSpan> renderParas(List<XmlElement> paragraphs) {
     return 0;
   }
 
-  void commitNode(XmlNode node, int style) {
+  void _commitNode(XmlNode node, int style) {
     String txt = (node.nodeType == XmlNodeType.TEXT)
         ? node.value!
         : node.innerText;
@@ -112,7 +122,7 @@ List<TextSpan> renderParas(List<XmlElement> paragraphs) {
     }
     bool nl = true;
     for (var child in para.children) {
-      int style = getStyle(child);
+      int style = _getStyle(child);
       if (style < 0) {
         for (var item in child.children) {
           if (!nl) {
@@ -120,13 +130,13 @@ List<TextSpan> renderParas(List<XmlElement> paragraphs) {
           }
           buf.write("$bullet ");
           for (var node in item.children) {
-            style = getStyle(node);
-            commitNode(node, style);
+            style = _getStyle(node);
+            _commitNode(node, style);
             nl = false;
           }
         }
       } else {
-        commitNode(child, style);
+        _commitNode(child, style);
         nl = false;
       }
     }
