@@ -530,7 +530,7 @@ List<TreeNode> _addChildren(List<XmlElement> list, Counter ctr) {
       (nt, index),
       item.getAttribute("itemno"),
       nt == NodeType.termType
-          ? item.getAttribute('TermTitle')
+          ? item.getElement('TermTitle')?.innerText
           : item.getElement('ClassTitle')?.innerText,
       _addChildren(_termsClasses(item), ctr),
     );

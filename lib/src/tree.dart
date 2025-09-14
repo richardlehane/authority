@@ -65,7 +65,7 @@ Widget makeLabel(String? itemno, String? title) {
       ? title
       : (title == null)
       ? itemno
-      : "$itemno ${title}";
+      : "$itemno $title";
   return (label == null) ? SizedBox() : Text(label);
 }
 
