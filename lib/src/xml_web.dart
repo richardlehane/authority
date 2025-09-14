@@ -209,7 +209,7 @@ class Session {
   int multiLen(int index, String name) {
     XmlElement? el = nodes[index];
     if (el == null) return 0;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return 0;
     if (mt == _MultiType.status) return el.childElements.length;
@@ -219,7 +219,7 @@ class Session {
   int multiAdd(int index, String name, String? sub) {
     XmlElement? el = nodes[index];
     if (el == null) return -1;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     XmlElement t = XmlElement(XmlName(sub ?? name), [], [], false);
     if (mt == _MultiType.status) {
       el = mt.parent(el);
@@ -247,7 +247,7 @@ class Session {
   void multiDrop(int index, String name, int idx) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return;
     if (mt == _MultiType.status) {
@@ -262,7 +262,7 @@ class Session {
   void multiUp(int index, String name, int idx) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return;
     el = (mt == _MultiType.status)
@@ -278,7 +278,7 @@ class Session {
   void multiDown(int index, String name, int idx) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return;
     el = (mt == _MultiType.status)
@@ -294,7 +294,7 @@ class Session {
   void multiSet(int index, String name, int idx, String? sub, String? val) {
     XmlElement? el = nodes[index];
     if (el == null) return;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return;
     el = (mt == _MultiType.status)
@@ -306,9 +306,14 @@ class Session {
       return;
     }
     if (_isAttr(sub)) {
-      final en = elementName(sub);
-      XmlElement? t = el.getElement(en);
       String? a = (val == "") ? null : val;
+      final en = _elementName(sub);
+      if (en == null) {
+        el.setAttribute(sub, a, namespace: _ns);
+        return;
+      }
+      XmlElement? t = el.getElement(en);
+
       if (t == null) {
         t = XmlElement(XmlName(en), [], [], false);
         (int, int) p = _insertPos(el, en);
@@ -338,7 +343,7 @@ class Session {
   String? multiGet(int index, String name, int idx, String? sub) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return null;
     el = (mt == _MultiType.status)
@@ -346,10 +351,9 @@ class Session {
         : el.findElements(name).elementAt(idx);
     if (sub == null) return el.innerText; // handle simple case - e.g. LinkedTo
     if (_isAttr(sub)) {
-      XmlElement? t = el.getElement(elementName(sub));
-      if (t == null) return null;
-      String? a = t.getAttribute(sub, namespace: _ns);
-      return (a != null) ? a : null;
+      String? en = _elementName(sub);
+      if (en != null) el = el.getElement(en);
+      return el?.getAttribute(sub, namespace: _ns);
     }
     XmlElement? t = el.getElement(sub);
     if (t == null) return null;
@@ -364,7 +368,7 @@ class Session {
   ) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return null;
     el = (mt == _MultiType.status)
@@ -388,7 +392,7 @@ class Session {
   ) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return null;
     el = (mt == _MultiType.status)
@@ -422,7 +426,7 @@ class Session {
   int fieldsLen(int index, String name, int idx, String sub) {
     XmlElement? el = nodes[index];
     if (el == null) return 0;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return 0;
     el = (mt == _MultiType.status)
@@ -434,7 +438,7 @@ class Session {
   String? fieldsGet(int index, String name, int idx, String sub, int fidx) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return null;
     el = (mt == _MultiType.status)
@@ -454,7 +458,7 @@ class Session {
   ) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return null;
     el = (mt == _MultiType.status)
@@ -471,7 +475,7 @@ class Session {
   void fieldsAdd(int index, String name, int idx, String sub) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
-    final mt = fromName(name);
+    final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return null;
     el = (mt == _MultiType.status)
@@ -678,7 +682,7 @@ enum _MultiType {
   }
 }
 
-_MultiType fromName(String name) {
+_MultiType _multypFromName(String name) {
   switch (name) {
     case "Status":
       return _MultiType.status;
@@ -689,11 +693,11 @@ _MultiType fromName(String name) {
   }
 }
 
-String elementName(String attr) {
+String? _elementName(String attr) {
   switch (attr) {
     case "unit":
       return "RetentionPeriod";
     default:
-      return "";
+      return null;
   }
 }
