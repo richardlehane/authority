@@ -222,6 +222,7 @@ class Session {
     final mt = _multypFromName(name);
     el = mt.parent(el!);
     if (el == null) return false;
+    print(el.children);
     return el.children.isEmpty;
   }
 
