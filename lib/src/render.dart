@@ -7,6 +7,16 @@ mixin Render {
   String? multiGet(String name, int idx, String? sub);
   List<XmlElement>? multiGetParagraphs(String name, int idx, String? sub);
 
+  List<TextSpan> ids(int index) {
+    String? control = multiGet("ID", index, "control");
+    String? content = multiGet("ID", index, null);
+    if (control != null && content != null)
+      return [_toSpan(0, "${control} ${content}")];
+    if (control != null) return [_toSpan(0, control)];
+    if (content != null) return [_toSpan(0, content)];
+    return [];
+  }
+
   List<TextSpan> comment(int index) {
     List<TextSpan> comment = [];
     String? author = multiGet("Comment", index, "author");
