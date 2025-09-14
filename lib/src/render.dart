@@ -17,6 +17,26 @@ mixin Render {
     return [];
   }
 
+  List<TextSpan> linkedto(int index) {
+    String? typ = multiGet("LinkedTo", index, "type");
+    String? content = multiGet("LinkedTo", index, null);
+    if (typ != null && content != null)
+      return [_toSpan(0, "${typ} ${content}")];
+    if (typ != null) return [_toSpan(0, typ)];
+    if (content != null) return [_toSpan(0, content)];
+    return [];
+  }
+
+  List<TextSpan> source(int index) {
+    String? url = multiGet("LinkedTo", index, "url");
+    String? content = multiGet("LinkedTo", index, null);
+    if (url != null && content != null)
+      return [_toSpan(0, "${content} ("), _toSpan(3, url), _toSpan(0, ")")];
+    if (url != null) return [_toSpan(3, url)];
+    if (content != null) return [_toSpan(0, content)];
+    return [];
+  }
+
   List<TextSpan> comment(int index) {
     List<TextSpan> comment = [];
     String? author = multiGet("Comment", index, "author");
