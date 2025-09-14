@@ -246,10 +246,16 @@ class Session {
       return el.childElements.length - 1;
     }
     if (mt == _MultiType.para) {
-      el = mt.parent(el);
-      if (el == null) return -1;
-      el.children.add(t);
-      return el.childElements.where((e) => e.localName == name).length - 1;
+      XmlElement? el2 = mt.parent(el);
+      if (el2 == null) {
+        String en = mt.parentName(el);
+        (int, int) p = _insertPos(el, en);
+        el2 = XmlElement(XmlName(en), [], [t], false);
+        nodes[index]!.children.insert(p.$1, el2);
+        return 0;
+      }
+      el2.children.add(t);
+      return el2.childElements.where((e) => e.localName == name).length - 1;
     }
     (int, int) p = _insertPos(el, name);
     el.children.insert(p.$1, t);
@@ -674,6 +680,24 @@ enum _MultiType {
   node,
   para,
   status;
+
+  String parentName(XmlElement el) {
+    switch (this) {
+      case _MultiType.node:
+        return "";
+      case _MultiType.para:
+        switch (el.localName) {
+          case "Context":
+            return "ContextContent";
+          case "Term":
+            return "TermDescription";
+          default:
+            return "ClassDescription";
+        }
+      case _MultiType.status:
+        return "Status";
+    }
+  }
 
   XmlElement? parent(XmlElement el) {
     switch (this) {
