@@ -31,9 +31,14 @@ mixin Render {
     String? url = multiGet("LinkedTo", index, "url");
     String? content = multiGet("LinkedTo", index, null);
     if (url != null && content != null)
-      return [_toSpan(0, "${content} ("), _toSpan(3, url), _toSpan(0, ")")];
+      return [
+        _toSpan(2, content),
+        _toSpan(0, " ("),
+        _toSpan(3, url),
+        _toSpan(0, ")"),
+      ];
     if (url != null) return [_toSpan(3, url)];
-    if (content != null) return [_toSpan(0, content)];
+    if (content != null) return [_toSpan(2, content)];
     return [];
   }
 
