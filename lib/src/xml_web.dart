@@ -402,7 +402,6 @@ class Session {
     return l.isEmpty ? null : l;
   }
 
-  // todo: delete empty parent??
   void multiSetParagraphs(
     int index,
     String name,

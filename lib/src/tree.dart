@@ -46,10 +46,11 @@ class Counter {
   }
 }
 
-List<TreeViewItem> treeFrom(List<TreeNode> nodes) {
+List<TreeViewItem> treeFrom(List<TreeNode> nodes, Ref selected) {
   return List<TreeViewItem>.generate(
     nodes.length,
     (int i) => makeItem(
+      selected,
       nodes[i].ref,
       nodes[i].itemno,
       nodes[i].title,
@@ -70,6 +71,7 @@ Widget makeLabel(String? itemno, String? title) {
 }
 
 TreeViewItem makeItem(
+  Ref selected,
   Ref ref,
   String? itemno,
   String? title,
@@ -82,9 +84,10 @@ TreeViewItem makeItem(
       NodeType.contextType => Icon(FluentIcons.page_list),
       _ => null,
     },
+    selected: selected == ref,
     content: makeLabel(itemno, title),
     value: ref,
-    children: (list == null) ? [] : treeFrom(list),
+    children: (list == null) ? [] : treeFrom(list, selected),
   );
 }
 
@@ -209,7 +212,7 @@ TreeViewItem Function(int i) _siblingGenerator(
     if (next) {
       next = false;
       decrement = true;
-      final ti = makeItem((nt, ctr.next(nt)), null, null, []);
+      final ti = makeItem(ctr.selected, (nt, ctr.next(nt)), null, null, []);
       ti.selected = true;
       return ti;
     }
@@ -242,7 +245,7 @@ TreeViewItem Function(int i) _childGenerator(
   return (int i) {
     // add child as the last sibling
     if (i == old.length) {
-      final ti = makeItem((nt, ctr.next(nt)), null, null, []);
+      final ti = makeItem(ctr.selected, (nt, ctr.next(nt)), null, null, []);
       ti.selected = true;
       return ti;
     }

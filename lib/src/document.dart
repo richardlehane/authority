@@ -45,7 +45,10 @@ class Document {
     final sessionIndex = sess.empty();
     return Document(
       title: title,
-      treeItems: treeFrom(sess.tree(sessionIndex, Counter())),
+      treeItems: treeFrom(sess.tree(sessionIndex, Counter()), (
+        NodeType.termType,
+        0,
+      )),
       sessionIndex: sessionIndex,
     );
   }
@@ -56,7 +59,10 @@ class Document {
     return Document(
       title: f.name,
       path: f.path,
-      treeItems: treeFrom(sess.tree(sessionIndex, Counter())),
+      treeItems: treeFrom(sess.tree(sessionIndex, Counter()), (
+        NodeType.termType,
+        0,
+      )),
       sessionIndex: sessionIndex,
     );
   }
@@ -76,10 +82,6 @@ class Document {
   Future<File> saveAs(String p) {
     path = p;
     return save();
-  }
-
-  void refreshTree() {
-    treeItems = treeFrom(Session().tree(sessionIndex, Counter(selected)));
   }
 
   CurrentNode current() {
