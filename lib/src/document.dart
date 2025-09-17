@@ -36,7 +36,7 @@ class Document {
     this.treeItems,
     this.sessionIndex = 0,
     this.mutation = 0,
-    this.selected = (NodeType.rootType, 0),
+    this.selected = (NodeType.termType, 0),
   });
 
   /// Create a new empty document model with default structure
