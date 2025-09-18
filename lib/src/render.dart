@@ -11,8 +11,8 @@ mixin Render {
     String? control = multiGet("ID", index, "control");
     String? content = multiGet("ID", index, null);
     if (control != null && content != null)
-      return [_toSpan(0, "${control} ${content}")];
-    if (control != null) return [_toSpan(0, control)];
+      return [_toSpan(1, control), _toSpan(0, ": ${content}")];
+    if (control != null) return [_toSpan(1, control)];
     if (content != null) return [_toSpan(0, content)];
     return [];
   }
@@ -46,7 +46,6 @@ mixin Render {
     List<TextSpan> comment = [];
     String? author = multiGet("Comment", index, "author");
     List<XmlElement>? content = multiGetParagraphs("Comment", index, null);
-
     if (author != null) comment.add(_toSpan(1, '${author}: '));
     if (content != null) comment.addAll(_renderParas(content));
     return comment;
