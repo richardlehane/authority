@@ -5,8 +5,11 @@ import 'tree.dart' show Ref;
 
 enum SeeRefType { none, local, ga28, other }
 
+enum StatusKind { none, date, supersede, draft, submitted, applying, issued }
+
 enum StatusType {
   none,
+  draft,
   submitted,
   approved,
   issued,
@@ -20,9 +23,25 @@ enum StatusType {
   expired,
   revoked;
 
+  StatusKind kind() {
+    return switch (this) {
+      draft => StatusKind.draft,
+      submitted => StatusKind.submitted,
+      applying => StatusKind.applying,
+      issued => StatusKind.issued,
+      partsupersedes ||
+      supersedes ||
+      partsupersededby ||
+      supersededby => StatusKind.supersede,
+      approved || amended || review || expired || revoked => StatusKind.date,
+      none => StatusKind.none,
+    };
+  }
+
   @override
   String toString() {
     return switch (this) {
+      draft => "Draft",
       submitted => "Submitted",
       approved => "Approved",
       issued => "Issued",
@@ -42,6 +61,7 @@ enum StatusType {
 
 StatusType statusTypeFromString(String name) {
   return switch (name) {
+    "Draft" => StatusType.draft,
     "Submitted" => StatusType.submitted,
     "Approved" => StatusType.submitted,
     "Issued" => StatusType.submitted,
