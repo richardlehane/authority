@@ -3,6 +3,61 @@ import 'package:xml/xml.dart' show XmlElement;
 import "render.dart";
 import 'tree.dart' show Ref;
 
+enum SeeRefType { none, local, ga28, other }
+
+enum StatusType {
+  none,
+  submitted,
+  approved,
+  issued,
+  applying,
+  partsupersedes,
+  supersedes,
+  partsupersededby,
+  supersededby,
+  amended,
+  review,
+  expired,
+  revoked;
+
+  @override
+  String toString() {
+    return switch (this) {
+      submitted => "Submitted",
+      approved => "Approved",
+      issued => "Issued",
+      applying => "Aplying",
+      partsupersedes => "Partly supersedes",
+      supersedes => "Supersedes",
+      partsupersededby => "Partly superseded by",
+      supersededby => "Superseded by",
+      amended => "Amended",
+      review => "Review",
+      expired => "Expired",
+      revoked => "Revoked",
+      _ => "None",
+    };
+  }
+}
+
+StatusType statusTypeFromString(String name) {
+  return switch (name) {
+    "Submitted" => StatusType.submitted,
+    "Approved" => StatusType.submitted,
+    "Issued" => StatusType.submitted,
+    "Aplying" => StatusType.submitted,
+    "PartSupersedes" => StatusType.submitted,
+    "Supersedes" => StatusType.submitted,
+    "PartSupersededBy" => StatusType.submitted,
+    "SupersededBy" => StatusType.submitted,
+    "Amended" => StatusType.submitted,
+    "Review" => StatusType.submitted,
+    "Expired" => StatusType.submitted,
+    "Revoked" => StatusType.submitted,
+    _ => StatusType.none,
+  };
+}
+
 enum NodeType {
   rootType,
   contextType,
@@ -154,21 +209,27 @@ class CurrentNode with Render {
     return Session().multiSetParagraphs(session, name, idx, sub, val);
   }
 
-  // For the nth element with name, or nth within name, count the number of sub elements with sub
-  // these are for repeating elements within multi element e.g. TermReference in SeeReference
-  int fieldsLen(String name, int idx, String sub) {
-    return Session().fieldsLen(session, name, idx, sub);
+  StatusType multiStatusType(int idx) {
+    return StatusType.none;
   }
 
-  String? fieldsGet(String name, int idx, String sub, int fidx) {
-    return Session().fieldsGet(session, name, idx, sub, fidx);
+  SeeRefType multiSeeRefType(int idx) {
+    return SeeRefType.none;
   }
 
-  void fieldsSet(String name, int idx, String sub, int fidx, String? val) {
-    return Session().fieldsSet(session, name, idx, sub, fidx, val);
+  int termsRefLen(String name, int idx) {
+    return Session().termsRefLen(session, name, idx);
   }
 
-  void fieldsAdd(String name, int idx, String sub) {
-    return Session().fieldsAdd(session, name, idx, sub);
+  void termsRefAdd(String name, int idx) {
+    return Session().termsRefAdd(session, name, idx);
+  }
+
+  String? termsRefGet(String name, int idx, int tidx) {
+    return Session().termsRefGet(session, name, idx, tidx);
+  }
+
+  void termsRefSet(String name, int idx, int tidx, String? val) {
+    return Session().termsRefSet(session, name, idx, tidx, val);
   }
 }

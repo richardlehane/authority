@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:xml/xml.dart';
 import 'package:file_picker/file_picker.dart' show PlatformFile;
-import 'node.dart' show NodeType, nodeFromString;
+import 'node.dart'
+    show NodeType, nodeFromString, StatusType, statusTypeFromString, SeeRefType;
 import 'tree.dart' show TreeNode, Counter, Ref;
 
 const String _template = '''
@@ -442,7 +443,29 @@ class Session {
     el.children.insertAll(0, val); // update
   }
 
-  int fieldsLen(int index, String name, int idx, String sub) {
+  StatusType multiStatusType(int index, int idx) {
+    XmlElement? el = nodes[index];
+    if (el == null) return StatusType.none;
+    el = el.getElement("Status");
+    if (el == null) return StatusType.none;
+    return statusTypeFromString(el.childElements.elementAt(idx).localName);
+  }
+
+  SeeRefType multiSeeRefType(int index, int idx) {
+    XmlElement? el = nodes[index];
+    if (el == null) return SeeRefType.none;
+    el = _MultiType.para.parent(el);
+    if (el == null) return SeeRefType.none;
+    el = el.findElements("SeeReference").elementAt(idx);
+    if (el.getElement("ItemNoRef") != null) return SeeRefType.other;
+    XmlElement? ir = el.getElement("IDRef");
+    XmlElement? ar = el.getElement("AuthorityTitleRef");
+    if (ir == null && ar == null) return SeeRefType.local;
+    if (ir!.innerText == "28") return SeeRefType.ga28;
+    return SeeRefType.other;
+  }
+
+  int termsRefLen(int index, String name, int idx) {
     XmlElement? el = nodes[index];
     if (el == null) return 0;
     final mt = _multypFromName(name);
@@ -451,10 +474,10 @@ class Session {
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx);
-    return el.findElements(sub).length;
+    return el.findElements("TermTitleRef").length;
   }
 
-  String? fieldsGet(int index, String name, int idx, String sub, int fidx) {
+  void termsRefAdd(int index, String name, int idx) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
     final mt = _multypFromName(name);
@@ -463,18 +486,13 @@ class Session {
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx);
-    el = el.findElements(sub).elementAt(fidx);
-    return el.innerText.isEmpty ? null : el.innerText;
+    XmlElement e = XmlElement(XmlName("TermTitleRef"), [], [], false);
+    (int, int) p = _insertPos(el, "TermTitleRef");
+    el.children.insert(p.$1, e);
+    return;
   }
 
-  void fieldsSet(
-    int index,
-    String name,
-    int idx,
-    String sub,
-    int fidx,
-    String? val,
-  ) {
+  String? termsRefGet(int index, String name, int idx, int tidx) {
     XmlElement? el = nodes[index];
     if (el == null) return null;
     final mt = _multypFromName(name);
@@ -483,27 +501,25 @@ class Session {
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx);
-    el = el.findElements(sub).elementAt(fidx);
+    el = el.findElements("TermTitleRef").elementAt(tidx);
+    return el.innerText;
+  }
+
+  void termsRefSet(int index, String name, int idx, int tidx, String? val) {
+    XmlElement? el = nodes[index];
+    if (el == null) return null;
+    final mt = _multypFromName(name);
+    el = mt.parent(el);
+    if (el == null) return null;
+    el = (mt == _MultiType.status)
+        ? el.childElements.elementAt(idx)
+        : el.findElements(name).elementAt(idx);
+    el = el.findElements("TermTitleRef").elementAt(tidx);
     if (val == null) {
       el.remove();
       return;
     }
     el.innerText = val;
-  }
-
-  void fieldsAdd(int index, String name, int idx, String sub) {
-    XmlElement? el = nodes[index];
-    if (el == null) return null;
-    final mt = _multypFromName(name);
-    el = mt.parent(el);
-    if (el == null) return null;
-    el = (mt == _MultiType.status)
-        ? el.childElements.elementAt(idx)
-        : el.findElements(name).elementAt(idx);
-    XmlElement e = XmlElement(XmlName(sub), [], [], false);
-    (int, int) p = _insertPos(el, sub);
-    el.children.insert(p.$1, e);
-    return;
   }
 }
 
