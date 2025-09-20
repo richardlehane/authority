@@ -265,6 +265,40 @@ class Session {
     return p.$2;
   }
 
+  void multiAddSeeRef(int index, SeeRefType srt) {
+    XmlElement? el = nodes[index];
+    if (el == null) return;
+    XmlElement? el2 = _MultiType.para.parent(el);
+    XmlElement? t = switch (srt) {
+      SeeRefType.ga28 => XmlElement(XmlName("SeeReference"), [], [
+        XmlElement(
+          XmlName("IDRef"),
+          [XmlAttribute(XmlName("control"), "GA")],
+          [XmlText("28")],
+          false,
+        ),
+        XmlElement(XmlName("AuthorityTitleRef"), [], [
+          XmlText("Administrative records"),
+        ], false),
+      ], false),
+      SeeRefType.other => XmlElement(XmlName("SeeReference"), [], [
+        XmlElement(XmlName("IDRef"), [], [], false),
+      ], false),
+      SeeRefType.local => XmlElement(XmlName("SeeReference"), [], [], false),
+      _ => null,
+    };
+    if (t == null) return;
+    if (el2 != null) {
+      el2.children.add(t);
+      return;
+    }
+    String en = _MultiType.para.parentName(el);
+    (int, int) p = _insertPos(el, en);
+    el2 = XmlElement(XmlName(en), [], [t], false);
+    nodes[index]!.children.insert(p.$1, el2);
+    return;
+  }
+
   void multiDrop(int index, String name, int idx) {
     XmlElement? el = nodes[index];
     if (el == null) return;

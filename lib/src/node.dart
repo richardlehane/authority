@@ -237,6 +237,10 @@ class CurrentNode with Render {
     return SeeRefType.none;
   }
 
+  void multiSeeRefAdd(SeeRefType srt) {
+    return Session().multiAddSeeRef(session, srt);
+  }
+
   int termsRefLen(String name, int idx) {
     return Session().termsRefLen(session, name, idx);
   }
