@@ -283,8 +283,11 @@ class Session {
       ], false),
       SeeRefType.other => XmlElement(XmlName("SeeReference"), [], [
         XmlElement(XmlName("IDRef"), [], [], false),
+        XmlElement(XmlName("TermTitleRef"), [], [], false),
       ], false),
-      SeeRefType.local => XmlElement(XmlName("SeeReference"), [], [], false),
+      SeeRefType.local => XmlElement(XmlName("SeeReference"), [], [
+        XmlElement(XmlName("TermTitleRef"), [], [], false),
+      ], false),
       _ => null,
     };
     if (t == null) return;
