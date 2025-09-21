@@ -221,16 +221,19 @@ class Session {
 
   bool multiEmpty(int index, String name, int idx) {
     XmlElement? el = nodes[index];
-    if (el == null) false;
+    if (el == null) true;
     final mt = _multypFromName(name);
     el = mt.parent(el!);
-    if (el == null) return false;
+    if (el == null) return true;
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx);
     if (name == "SeeReference") {
-      el = el.getElement("TermTitleRef");
-      if (el == null) return false;
+      XmlElement? ttr = el.getElement("TermTitleRef");
+      if (ttr != null && ttr.children.isNotEmpty) return false;
+      el = el.getElement("IDRef");
+      if (el == null || el.children.isEmpty) return true;
+      return el.innerText == "28";
     }
     return el.children.isEmpty;
   }
