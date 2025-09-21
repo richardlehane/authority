@@ -3,15 +3,15 @@
   "packages": [
     {
       "name": "_fe_analyzer_shared",
-      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-88.0.0",
+      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-89.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.9"
     },
     {
       "name": "analyzer",
-      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-8.1.1",
+      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-8.2.0",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.9"
     },
     {
       "name": "args",
@@ -99,7 +99,7 @@
     },
     {
       "name": "file_picker",
-      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/file_picker-10.3.2",
+      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/file_picker-10.3.3",
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -243,9 +243,9 @@
     },
     {
       "name": "pool",
-      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/pool-1.5.1",
+      "rootUri": "file:///C:/Users/richa/AppData/Local/Pub/Cache/hosted/pub.dev/pool-1.5.2",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.4"
     },
     {
       "name": "pub_semver",

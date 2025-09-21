@@ -228,6 +228,10 @@ class Session {
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx);
+    if (name == "SeeReference") {
+      el = el.getElement("TermTitleRef");
+      if (el == null) return false;
+    }
     return el.children.isEmpty;
   }
 
