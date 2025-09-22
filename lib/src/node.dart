@@ -230,11 +230,11 @@ class CurrentNode with Render {
   }
 
   StatusType multiStatusType(int idx) {
-    return StatusType.none;
+    return Session().multiStatusType(session, idx);
   }
 
   SeeRefType multiSeeRefType(int idx) {
-    return SeeRefType.none;
+    return Session().multiSeeRefType(session, idx);
   }
 
   void multiSeeRefAdd(SeeRefType srt) {
