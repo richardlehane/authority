@@ -320,8 +320,8 @@ class Session {
       if (el.childElements.length == 0) el.remove(); // remove Status if empty
       return;
     }
-    el = el.findElements(name).elementAt(idx);
-    el.remove();
+    el = el.findElements(name).elementAtOrNull(idx);
+    el?.remove();
   }
 
   void multiUp(int index, String name, int idx) {
@@ -331,12 +331,12 @@ class Session {
     el = mt.parent(el);
     if (el == null) return;
     el = (mt == _MultiType.status)
-        ? el.childElements.elementAt(idx)
-        : el.findElements(name).elementAt(idx);
-    XmlElement? prev = el.previousElementSibling;
+        ? el.childElements.elementAtOrNull(idx)
+        : el.findElements(name).elementAtOrNull(idx);
+    XmlElement? prev = el?.previousElementSibling;
     if (prev == null || (mt != _MultiType.status && prev.localName != name))
       return;
-    el.remove();
+    el!.remove(); // can't be null as prev would be null too and return
     prev.parentElement!.children.insert(_pos(prev), el);
   }
 
@@ -347,12 +347,12 @@ class Session {
     el = mt.parent(el);
     if (el == null) return;
     el = (mt == _MultiType.status)
-        ? el.childElements.elementAt(idx)
-        : el.findElements(name).elementAt(idx);
-    XmlElement? next = el.nextElementSibling;
+        ? el.childElements.elementAtOrNull(idx)
+        : el.findElements(name).elementAtOrNull(idx);
+    XmlElement? next = el?.nextElementSibling;
     if (next == null || (mt != _MultiType.status && next.localName != name))
       return;
-    el.remove();
+    el!.remove();
     next.parentElement!.children.insert(_pos(next) + 1, el);
   }
 
@@ -364,7 +364,7 @@ class Session {
     if (el == null) return;
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
-        : el.findElements(name).elementAt(idx);
+        : el.findElements(name).elementAt(idx); // el must exist
     if (sub == null) {
       if (val == null) return;
       el.innerText = val;
@@ -412,8 +412,9 @@ class Session {
     el = mt.parent(el);
     if (el == null) return null;
     el = (mt == _MultiType.status)
-        ? el.childElements.elementAt(idx)
-        : el.findElements(name).elementAt(idx);
+        ? el.childElements.elementAtOrNull(idx)
+        : el.findElements(name).elementAtOrNull(idx);
+    if (el == null) return null;
     if (sub == null) return el.innerText; // handle simple case - e.g. LinkedTo
     if (_isAttr(sub)) {
       String? en = _elementName(sub);
@@ -545,8 +546,8 @@ class Session {
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx);
-    el = el.findElements("TermTitleRef").elementAt(tidx);
-    return el.innerText;
+    el = el.findElements("TermTitleRef").elementAtOrNull(tidx);
+    return el?.innerText;
   }
 
   void termsRefSet(int index, String name, int idx, int tidx, String? val) {
@@ -558,12 +559,30 @@ class Session {
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx);
-    el = el.findElements("TermTitleRef").elementAt(tidx);
-    if (val == null) {
-      el.remove();
-      return;
+    Iterable<XmlElement> list = el.findElements("TermTitleRef");
+    if (list.length > tidx) {
+      el = list.elementAt(tidx);
+      if (val == null) {
+        el.remove();
+        return;
+      }
+      el.innerText = val;
     }
-    el.innerText = val;
+    if (val == null) return;
+    int num = list.length;
+    (int, int) pos = _insertPos(el, "TermTitleRef");
+    while (num <= tidx) {
+      el.children.insert(
+        pos.$1,
+        XmlElement(
+          XmlName("TermTitleRef"),
+          [],
+          (tidx == num) ? [XmlText(val)] : [],
+          false,
+        ),
+      );
+      num++;
+    }
   }
 }
 
