@@ -818,10 +818,15 @@ _MultiType _multypFromName(String name) {
   }
 }
 
+// used in multiset and multiget functions to find the parent elements for nested attributes
 String? _elementName(String attr) {
   switch (attr) {
     case "unit":
       return "RetentionPeriod";
+    case "control":
+      return "IDRef";
+    case "agencyno":
+      return "Agency";
     default:
       return null;
   }
