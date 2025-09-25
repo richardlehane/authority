@@ -7,7 +7,7 @@ TextSpan? _id(String? control, String? content) {
   if (control == null && content == null) return null;
   if (control == null) return _toSpan(0, content!);
   if (content == null) return _toSpan(0, control);
-  return _toSpan(1, "${control} ${content}");
+  return _toSpan(0, "${control} ${content}");
 }
 
 mixin Render {
@@ -69,7 +69,7 @@ mixin Render {
       seeref.add(_toSpan(2, title));
     }
     int num = termsRefLen("SeeReference", index);
-    List<String> terms = List.filled(num, "");
+    List<String> terms = List.filled(num, "", growable: true);
     int tidx = 0;
     for (; num > 0; num--) {
       terms[tidx] = termsRefGet("SeeReference", index, tidx) ?? "";
