@@ -3,18 +3,24 @@ import 'package:fluent_ui/fluent_ui.dart'
 import 'package:xml/xml.dart'
     show XmlElement, XmlNode, XmlNodeType, XmlStringExtension;
 
+TextSpan? _id(String? control, String? content) {
+  if (control == null && content == null) return null;
+  if (control == null) return _toSpan(0, content!);
+  if (content == null) return _toSpan(0, control);
+  return _toSpan(1, "${control} ${content}");
+}
+
 mixin Render {
   String? multiGet(String name, int idx, String? sub);
   List<XmlElement>? multiGetParagraphs(String name, int idx, String? sub);
+  int termsRefLen(String name, int idx);
+  String? termsRefGet(String name, int idx, int tidx);
 
   List<TextSpan> ids(int index) {
     String? control = multiGet("ID", index, "control");
     String? content = multiGet("ID", index, null);
-    if (control != null && content != null)
-      return [_toSpan(1, "${control} ${content}")];
-    if (control != null) return [_toSpan(0, control)];
-    if (content != null) return [_toSpan(0, content)];
-    return [];
+    if (control == null && content == null) return [];
+    return [_id(control, content)!];
   }
 
   List<TextSpan> linkedto(int index) {
@@ -50,6 +56,38 @@ mixin Render {
     if (author != null) comment.add(_toSpan(1, '${author}: '));
     if (content != null) comment.addAll(_renderParas(content));
     return comment;
+  }
+
+  List<TextSpan> seereference(int index) {
+    List<TextSpan> seeref = [];
+    String? control = multiGet("SeeReference", index, "control");
+    String? content = multiGet("SeeReference", index, "IDRef");
+    if (control != null || content != null) seeref.add(_id(control, content)!);
+    String? title = multiGet("SeeReference", index, "AuthorityTitleRef");
+    if (title != null) {
+      if (seeref.length > 0) seeref.add(_toSpan(0, " "));
+      seeref.add(_toSpan(2, title));
+    }
+    int num = termsRefLen("SeeReference", index);
+    List<String> terms = List.filled(num, "");
+    int tidx = 0;
+    for (; num > 0; num--) {
+      terms[tidx] = termsRefGet("SeeReference", index, tidx) ?? "";
+      tidx++;
+    }
+    String? itemno = multiGet("SeeReference", index, "ItemNoRef");
+    if (itemno != null) terms.add(itemno);
+    if (terms.length > 0) {
+      if (seeref.length > 0) seeref.add(_toSpan(0, " "));
+      seeref.add(_toSpan(1, terms.join(" - ")));
+    }
+    String? seetext = multiGet("SeeReference", index, "SeeText");
+    if (seetext != null) {
+      (seeref.length > 0)
+          ? seeref.add(_toSpan(0, " ${seetext}"))
+          : seeref.add(_toSpan(0, seetext));
+    }
+    return seeref;
   }
 
   List<TextSpan> disposal(int index) {
