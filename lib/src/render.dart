@@ -59,15 +59,12 @@ mixin Render {
   }
 
   List<TextSpan> seereference(int index) {
-    List<TextSpan> seeref = [];
+    List<TextSpan> seeref = [_toSpan(0, "See")];
     String? control = multiGet("SeeReference", index, "control");
     String? content = multiGet("SeeReference", index, "IDRef");
     if (control != null || content != null) seeref.add(_id(control, content)!);
     String? title = multiGet("SeeReference", index, "AuthorityTitleRef");
-    if (title != null) {
-      if (seeref.length > 0) seeref.add(_toSpan(0, " "));
-      seeref.add(_toSpan(2, title));
-    }
+    if (title != null) seeref.add(_toSpan(2, " ${title}"));
     int num = termsRefLen("SeeReference", index);
     List<String> terms = List.filled(num, "", growable: true);
     int tidx = 0;
@@ -77,16 +74,10 @@ mixin Render {
     }
     String? itemno = multiGet("SeeReference", index, "ItemNoRef");
     if (itemno != null) terms.add(itemno);
-    if (terms.length > 0) {
-      if (seeref.length > 0) seeref.add(_toSpan(0, " "));
-      seeref.add(_toSpan(1, terms.join(" - ")));
-    }
+    if (terms.length > 0) seeref.add(_toSpan(1, " ${terms.join(" - ")}"));
     String? seetext = multiGet("SeeReference", index, "SeeText");
-    if (seetext != null) {
-      (seeref.length > 0)
-          ? seeref.add(_toSpan(0, " ${seetext}"))
-          : seeref.add(_toSpan(0, seetext));
-    }
+    if (seetext != null) seeref.add(_toSpan(0, " ${seetext}"));
+
     return seeref;
   }
 
