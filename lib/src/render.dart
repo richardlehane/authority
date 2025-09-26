@@ -62,7 +62,8 @@ mixin Render {
     List<TextSpan> seeref = [_toSpan(0, "See")];
     String? control = multiGet("SeeReference", index, "control");
     String? content = multiGet("SeeReference", index, "IDRef");
-    if (control != null || content != null) seeref.add(_id(control, content)!);
+    if (control != null || content != null)
+      seeref.addAll([_toSpan(0, " "), _id(control, content)!]);
     String? title = multiGet("SeeReference", index, "AuthorityTitleRef");
     if (title != null) seeref.add(_toSpan(2, " ${title}"));
     int num = termsRefLen("SeeReference", index);
