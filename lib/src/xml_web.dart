@@ -808,11 +808,12 @@ enum _MultiType {
 }
 
 _MultiType _multypFromName(String name) {
+  if (statusTypeFromString(name) != StatusType.none) return _MultiType.status;
   switch (name) {
-    case "Status":
-      return _MultiType.status;
     case "SeeReference" || "Source":
       return _MultiType.para;
+    case "Status":
+      return _MultiType.status;
     default:
       return _MultiType.node;
   }
