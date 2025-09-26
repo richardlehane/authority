@@ -38,6 +38,25 @@ enum StatusType {
     };
   }
 
+  String toElement() {
+    return switch (this) {
+      draft => "Draft",
+      submitted => "Submitted",
+      approved => "Approved",
+      issued => "Issued",
+      applying => "Aplying",
+      partsupersedes => "PartSupersedes",
+      supersedes => "Supersedes",
+      partsupersededby => "PartSupersededBy",
+      supersededby => "SupersededBy",
+      amended => "Amended",
+      review => "Review",
+      expired => "Expired",
+      revoked => "Revoked",
+      _ => "None",
+    };
+  }
+
   @override
   String toString() {
     return switch (this) {
