@@ -64,7 +64,7 @@ enum StatusType {
       submitted => "Submitted",
       approved => "Approved",
       issued => "Issued",
-      applying => "Aplying",
+      applying => "Applying",
       partsupersedes => "Partly supersedes",
       supersedes => "Supersedes",
       partsupersededby => "Partly superseded by",
