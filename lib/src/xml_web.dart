@@ -362,6 +362,7 @@ class Session {
     final mt = _multypFromName(name);
     el = mt.parent(el);
     if (el == null) return;
+    print(el.localName);
     el = (mt == _MultiType.status)
         ? el.childElements.elementAt(idx)
         : el.findElements(name).elementAt(idx); // el must exist
@@ -371,14 +372,15 @@ class Session {
       return;
     }
     if (_isAttr(sub)) {
+      print("OK we have an attribute");
       String? a = (val == "") ? null : val;
       final en = _elementName(sub);
       if (en == null) {
+        print("got here yeay");
         el.setAttribute(sub, a, namespace: _ns);
         return;
       }
       XmlElement? t = el.getElement(en);
-
       if (t == null) {
         t = XmlElement(XmlName(en), [], [], false);
         (int, int) p = _insertPos(el, en);
