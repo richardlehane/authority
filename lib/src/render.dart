@@ -2,6 +2,24 @@ import 'package:fluent_ui/fluent_ui.dart'
     show TextSpan, TextStyle, FontWeight, FontStyle, TextDecoration, Colors;
 import 'package:xml/xml.dart'
     show XmlElement, XmlNode, XmlNodeType, XmlStringExtension;
+import 'package:intl/intl.dart' show DateFormat;
+import 'node.dart' show StatusType, StatusKind;
+
+DateTime? parseDate(String? val) {
+  if (val == null) return null;
+  try {
+    return DateTime.parse(val);
+  } catch (e) {
+    return null;
+  }
+}
+
+final DateFormat format = DateFormat("d MMM yyyy");
+
+String? formatDate(DateTime? dt) {
+  if (dt == null) return null;
+  return format.format(dt);
+}
 
 TextSpan? _id(String? control, String? content) {
   if (control == null && content == null) return null;
@@ -12,6 +30,7 @@ TextSpan? _id(String? control, String? content) {
 
 mixin Render {
   String? multiGet(String name, int idx, String? sub);
+  StatusType multiStatusType(int idx);
   List<XmlElement>? multiGetParagraphs(String name, int idx, String? sub);
   int termsRefLen(String name, int idx);
   String? termsRefGet(String name, int idx, int tidx);
@@ -80,6 +99,22 @@ mixin Render {
     if (seetext != null) seeref.add(_toSpan(0, " ${seetext}"));
 
     return seeref;
+  }
+
+  List<TextSpan> status(int index) {
+    StatusType st = multiStatusType(index);
+    switch (st.kind()) {
+      case StatusKind.date:
+        return status_date(st, index);
+      default:
+        return [];
+    }
+  }
+
+  List<TextSpan> status_date(StatusType st, int index) {
+    String? date = formatDate(parseDate(multiGet(st.toElement(), index, null)));
+    if (date == null) return [_toSpan(0, st.toString())];
+    return [_toSpan(0, "${st.toString()} $date")];
   }
 
   List<TextSpan> disposal(int index) {
