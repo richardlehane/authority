@@ -399,6 +399,7 @@ class Session {
         if (t.attributes.isEmpty) {
           el.children.remove(t);
         } else {
+          print(t.children);
           t.children.clear();
         }
       }
