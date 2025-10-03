@@ -378,7 +378,7 @@ class Session {
     }
     if (_isAttr(sub)) {
       String? a = (val == "") ? null : val;
-      final en = _elementName(sub);
+      final en = _elementName(mt, sub);
       if (en == null) {
         el.setAttribute(sub, a, namespace: _ns);
         return;
@@ -832,12 +832,17 @@ _MultiType _multypFromName(String name) {
 }
 
 // used in multiset and multiget functions to find the parent elements for nested attributes
-String? _elementName(String attr) {
+String? _elementName(_MultiType mt, String attr) {
   switch (attr) {
     case "unit":
       return "RetentionPeriod";
     case "control":
-      return "IDRef";
+      if (mt != _MultiType.node) {
+        return "IDRef";
+      } else {
+        return null;
+      }
+      ;
     case "agencyno":
       return "Agency";
     default:
