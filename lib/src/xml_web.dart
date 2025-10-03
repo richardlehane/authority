@@ -428,7 +428,7 @@ class Session {
     if (el == null) return null;
     if (sub == null) return el.innerText; // handle simple case - e.g. LinkedTo
     if (_isAttr(sub)) {
-      String? en = _elementName(sub);
+      String? en = _elementName(mt, sub);
       if (en != null) el = el.getElement(en);
       return el?.getAttribute(sub, namespace: _ns);
     }
