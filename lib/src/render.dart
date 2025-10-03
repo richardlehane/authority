@@ -5,7 +5,7 @@ import 'package:xml/xml.dart'
 import 'package:intl/intl.dart' show DateFormat;
 import 'node.dart' show StatusType, StatusKind;
 
-DateTime? parseDate(String? val) {
+DateTime? _parseDate(String? val) {
   if (val == null) return null;
   try {
     return DateTime.parse(val);
@@ -16,16 +16,23 @@ DateTime? parseDate(String? val) {
 
 final DateFormat format = DateFormat("d MMM yyyy");
 
-String? formatDate(DateTime? dt) {
+String? _formatDate(DateTime? dt) {
   if (dt == null) return null;
   return format.format(dt);
 }
 
-TextSpan? _id(String? control, String? content) {
+String? _agency(String? name, String? agencyno) {
+  if (name == null && agencyno == null) return null;
+  if (agencyno == null) return name;
+  if (name == null) return "($agencyno)";
+  return "$name ($agencyno)";
+}
+
+String? _id(String? control, String? content) {
   if (control == null && content == null) return null;
-  if (control == null) return _toSpan(0, content!);
-  if (content == null) return _toSpan(0, control);
-  return _toSpan(0, "${control} ${content}");
+  if (control == null) return content;
+  if (content == null) return content;
+  return "$control $content";
 }
 
 mixin Render {
@@ -36,10 +43,12 @@ mixin Render {
   String? termsRefGet(String name, int idx, int tidx);
 
   List<TextSpan> ids(int index) {
-    String? control = multiGet("ID", index, "control");
-    String? content = multiGet("ID", index, null);
-    if (control == null && content == null) return [];
-    return [_id(control, content)!];
+    String? id = _id(
+      multiGet("ID", index, "control"),
+      multiGet("ID", index, null),
+    );
+    if (id == null) return [];
+    return [_toSpan(0, id)];
   }
 
   List<TextSpan> linkedto(int index) {
@@ -79,10 +88,11 @@ mixin Render {
 
   List<TextSpan> seereference(int index) {
     List<TextSpan> seeref = [_toSpan(0, "See")];
-    String? control = multiGet("SeeReference", index, "control");
-    String? content = multiGet("SeeReference", index, "IDRef");
-    if (control != null || content != null)
-      seeref.addAll([_toSpan(0, " "), _id(control, content)!]);
+    String? id = _id(
+      multiGet("SeeReference", index, "control"),
+      multiGet("SeeReference", index, "IDRef"),
+    );
+    if (id != null) seeref.add(_toSpan(0, " $id"));
     String? title = multiGet("SeeReference", index, "AuthorityTitleRef");
     if (title != null) seeref.add(_toSpan(2, " ${title}"));
     int num = termsRefLen("SeeReference", index);
@@ -105,14 +115,159 @@ mixin Render {
     StatusType st = multiStatusType(index);
     switch (st.kind()) {
       case StatusKind.date:
-        return status_date(st, index);
+        return _status_date(st, index);
+      case StatusKind.supersede:
+        return _status_supersede(st, index);
+      case StatusKind.draft:
+        return _status_draft(st, index);
+      case StatusKind.submitted:
+        return _status_submitted(st, index);
+      case StatusKind.applying:
+        return _status_applying(st, index);
+      case StatusKind.issued:
+        return _status_issued(st, index);
       default:
         return [];
     }
   }
 
-  List<TextSpan> status_date(StatusType st, int index) {
-    String? date = formatDate(parseDate(multiGet(st.toElement(), index, null)));
+  List<TextSpan> _status_supersede(StatusType st, int index) {
+    List<TextSpan> ret = [_toSpan(0, st.toString())];
+    String? id = _id(
+      multiGet(st.toElement(), index, "control"),
+      multiGet(st.toElement(), index, "IDRef"),
+    );
+    if (id != null) ret.add(_toSpan(0, " $id"));
+    String? title = multiGet(st.toElement(), index, "AuthorityTitleRef");
+    if (title != null) ret.add(_toSpan(2, " ${title}"));
+    int num = termsRefLen(st.toElement(), index);
+    List<String> terms = List.filled(num, "", growable: true);
+    int tidx = 0;
+    for (; num > 0; num--) {
+      terms[tidx] = termsRefGet(st.toElement(), index, tidx) ?? "";
+      tidx++;
+    }
+    String? itemno = multiGet(st.toElement(), index, "ItemNoRef");
+    if (itemno != null) terms.add(itemno);
+    if (terms.length > 0) ret.add(_toSpan(1, " ${terms.join(" - ")}"));
+    String? parttext = multiGet(st.toElement(), index, "PartText");
+    if (parttext != null) ret.add(_toSpan(0, " $parttext"));
+    String? date = _formatDate(
+      _parseDate(multiGet(st.toElement(), index, "Date")),
+    );
+    if (date != null) ret.add(_toSpan(0, " on $date"));
+    return ret;
+  }
+
+  List<TextSpan> _status_draft(StatusType st, int index) {
+    List<TextSpan> ret = [_toSpan(0, st.toString())];
+    String? version = multiGet(st.toElement(), index, "version");
+    String? agency = _agency(
+      multiGet(st.toElement(), index, "Agency"),
+      multiGet(st.toElement(), index, "agencyno"),
+    );
+    String? date = _formatDate(
+      _parseDate(multiGet(st.toElement(), index, "Date")),
+    );
+    if (version != null) ret.add(_toSpan(0, " v.$version"));
+    if (agency != null) ret.add(_toSpan(0, ", $agency"));
+    if (date != null) {
+      if (ret.length > 1) {
+        ret.add(_toSpan(0, ", $date"));
+      } else {
+        ret.add(_toSpan(0, " $date"));
+      }
+    }
+    return ret;
+  }
+
+  List<TextSpan> _status_issued(StatusType st, int index) {
+    List<TextSpan> ret = [_toSpan(0, st.toString())];
+    String? agency = _agency(
+      multiGet(st.toElement(), index, "Agency"),
+      multiGet(st.toElement(), index, "agencyno"),
+    );
+    String? date = _formatDate(
+      _parseDate(multiGet(st.toElement(), index, "Date")),
+    );
+    if (agency != null) {
+      ret.add(_toSpan(0, " to $agency"));
+    }
+    if (date != null) {
+      ret.add(_toSpan(0, " on $date"));
+    }
+    return ret;
+  }
+
+  List<TextSpan> _status_submitted(StatusType st, int index) {
+    List<TextSpan> ret = [_toSpan(0, st.toString())];
+    String? officer = multiGet(st.toElement(), index, "Officer");
+    String? position = multiGet(st.toElement(), index, "Officer");
+    String? agency = _agency(
+      multiGet(st.toElement(), index, "Agency"),
+      multiGet(st.toElement(), index, "agencyno"),
+    );
+    String? date = _formatDate(
+      _parseDate(multiGet(st.toElement(), index, "Date")),
+    );
+    if (officer != null || position != null || agency != null) {
+      ret.add(_toSpan(0, " by "));
+      if (officer != null) {
+        ret.add(_toSpan(0, officer));
+      }
+      if (position != null) {
+        if (ret.length > 2) {
+          ret.add(_toSpan(0, ", $position"));
+        } else {
+          ret.add(_toSpan(0, position));
+        }
+      }
+      if (agency != null) {
+        if (ret.length > 2) {
+          ret.add(_toSpan(0, ", $agency"));
+        } else {
+          ret.add(_toSpan(0, agency));
+        }
+      }
+    }
+    if (date != null) {
+      ret.add(_toSpan(0, " on $date"));
+    }
+    return ret;
+  }
+
+  List<TextSpan> _status_applying(StatusType st, int index) {
+    List<TextSpan> ret = [_toSpan(0, "Applied")];
+    String? agency = _agency(
+      multiGet(st.toElement(), index, "Agency"),
+      multiGet(st.toElement(), index, "agencyno"),
+    );
+    String? extent = multiGet(st.toElement(), index, "extent");
+    String? start = _formatDate(
+      _parseDate(multiGet(st.toElement(), index, "StartDate")),
+    );
+    String? end = _formatDate(
+      _parseDate(multiGet(st.toElement(), index, "StartDate")),
+    );
+    if (extent != null) {
+      ret.add(_toSpan(0, " in $extent"));
+    }
+    if (agency != null) {
+      ret.add(_toSpan(0, " by $agency"));
+    }
+    if (start != null) {
+      ret.add(_toSpan(0, " from $start"));
+    }
+    if (start != null) {
+      ret.add(_toSpan(0, " until $start"));
+    }
+    return ret;
+  }
+
+  List<TextSpan> _status_date(StatusType st, int index) {
+    String? date = _formatDate(
+      _parseDate(multiGet(st.toElement(), index, null)),
+    );
     if (date == null) return [_toSpan(0, st.toString())];
     return [_toSpan(0, "${st.toString()} $date")];
   }
