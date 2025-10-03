@@ -160,7 +160,13 @@ class Session {
     XmlElement? t = el.getElement(name);
     // delete
     if (value == null) {
-      if (t != null) el.children.remove(t);
+      if (t != null) {
+        if (t.attributes.isEmpty) {
+          el.children.remove(t);
+        } else {
+          t.children.clear();
+        }
+      }
       return;
     }
     // update
@@ -389,7 +395,13 @@ class Session {
     XmlElement? t = el.getElement(sub);
     // delete
     if (val == null) {
-      if (t != null) el.children.remove(t);
+      if (t != null) {
+        if (t.attributes.isEmpty) {
+          el.children.remove(t);
+        } else {
+          t.children.clear();
+        }
+      }
       return;
     }
     // update
