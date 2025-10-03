@@ -269,7 +269,7 @@ mixin Render {
       _parseDate(multiGet(st.toElement(), index, null)),
     );
     if (date == null) return [_toSpan(0, st.toString())];
-    return [_toSpan(0, "${st.toString()} $date")];
+    return [_toSpan(0, "${st.toString()} on $date")];
   }
 
   List<TextSpan> disposal(int index) {
