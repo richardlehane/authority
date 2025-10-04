@@ -1,7 +1,21 @@
 import 'xml_web.dart';
 import 'package:xml/xml.dart' show XmlElement;
+import 'package:intl/intl.dart' show DateFormat;
 import "render.dart";
 import 'tree.dart' show Ref;
+
+enum DateType {
+  start,
+  end;
+
+  @override
+  String toString() {
+    return switch (this) {
+      start => "Start",
+      end => "End",
+    };
+  }
+}
 
 enum SeeRefType { none, local, ga28, other }
 
@@ -161,11 +175,23 @@ NodeType nodeFromString(String name) {
   return NodeType.rootType;
 }
 
+final DateFormat _format = DateFormat("yyyy-MM-dd");
+
 class CurrentNode with Render {
   int session;
   int mutation;
   Ref ref;
+  bool updated = false;
   CurrentNode(this.session, this.mutation, this.ref);
+
+  void _doUpdate() {
+    if (!ref.$1.like(NodeType.termType) || updated) return;
+    updated = true;
+    String today = _format.format(DateTime.now());
+    String? didUpdate = get("update");
+    if (didUpdate != null && didUpdate == today) return;
+    set("update", today);
+  }
 
   NodeType typ() {
     return Session().getType(session);
@@ -182,8 +208,27 @@ class CurrentNode with Render {
     return Session().get(session, name);
   }
 
+  String? getDate(DateType dt) {
+    return Session().getDate(session, dt);
+  }
+
+  bool getCirca(DateType dt) {
+    return Session().getCirca(session, dt);
+  }
+
   void set(String name, String? value) {
+    _doUpdate();
     return Session().set(session, name, value);
+  }
+
+  void setDate(DateType dt, String? value) {
+    _doUpdate();
+    return Session().setDate(session, dt, value);
+  }
+
+  void setCirca(DateType dt, bool value) {
+    _doUpdate();
+    return Session().setCirca(session, dt, value);
   }
 
   List<XmlElement>? getParagraphs(String name) {
@@ -191,6 +236,7 @@ class CurrentNode with Render {
   }
 
   void setParagraphs(String name, List<XmlElement>? paras) {
+    _doUpdate();
     return Session().setParagraphs(session, name, paras);
   }
 
@@ -208,25 +254,30 @@ class CurrentNode with Render {
   // Add multi element
   // If sub provided, it goes into enclosing element e.g. Status > Issued
   int multiAdd(String name, String? sub) {
+    _doUpdate();
     return Session().multiAdd(session, name, sub);
   }
 
   // Drop either the nth element with name, or the nth element within name
   void multiDrop(String name, int idx) {
+    _doUpdate();
     return Session().multiDrop(session, name, idx);
   } // todo
 
   // Move up either the nth element with name, or the nth element within name
   void multiUp(String name, int idx) {
+    _doUpdate();
     return Session().multiUp(session, name, idx);
   } // todo
 
   void multiDown(String name, int idx) {
+    _doUpdate();
     return Session().multiDown(session, name, idx);
   } // todo
 
   // For the nth element or nth element within name, set its value if sub null, or set subs value
   void multiSet(String name, int idx, String? sub, String? val) {
+    _doUpdate();
     return Session().multiSet(session, name, idx, sub, val);
   }
 
@@ -245,6 +296,7 @@ class CurrentNode with Render {
     String? sub,
     List<XmlElement>? val,
   ) {
+    _doUpdate();
     return Session().multiSetParagraphs(session, name, idx, sub, val);
   }
 
@@ -257,6 +309,7 @@ class CurrentNode with Render {
   }
 
   void multiSeeRefAdd(SeeRefType srt) {
+    _doUpdate();
     return Session().multiAddSeeRef(session, srt);
   }
 
@@ -265,6 +318,7 @@ class CurrentNode with Render {
   }
 
   void termsRefAdd(String name, int idx) {
+    _doUpdate();
     return Session().termsRefAdd(session, name, idx);
   }
 
@@ -273,6 +327,7 @@ class CurrentNode with Render {
   }
 
   void termsRefSet(String name, int idx, int tidx, String? val) {
+    _doUpdate();
     return Session().termsRefSet(session, name, idx, tidx, val);
   }
 }

@@ -2,7 +2,13 @@ import 'dart:convert';
 import 'package:xml/xml.dart';
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'node.dart'
-    show NodeType, nodeFromString, StatusType, statusTypeFromString, SeeRefType;
+    show
+        NodeType,
+        nodeFromString,
+        StatusType,
+        statusTypeFromString,
+        SeeRefType,
+        DateType;
 import 'tree.dart' show TreeNode, Counter, Ref;
 
 const String _template = '''
@@ -150,6 +156,29 @@ class Session {
     return (t != null) ? t.innerText : null;
   }
 
+  String? getDate(int index, DateType dt) {
+    XmlElement? el = nodes[index];
+    if (el == null) return null;
+    el = el.getElement("DateRange");
+    if (el == null) return null;
+    el = el.getElement(dt.toString());
+    if (el == null) return null;
+    return el.innerText;
+  }
+
+  bool getCirca(int index, DateType dt) {
+    XmlElement? el = nodes[index];
+    if (el == null) return false;
+    el = el.getElement("DateRange");
+    if (el == null) return false;
+    el = el.getElement(dt.toString());
+    if (el == null) return false;
+    if (el.innerText == "true" || el.innerText == "TRUE") {
+      return true;
+    }
+    return false;
+  }
+
   void set(int index, String name, String? value) {
     XmlElement? el = nodes[index];
     if (el == null) return;
@@ -162,7 +191,7 @@ class Session {
     if (value == null) {
       if (t != null) {
         if (t.attributes.isEmpty) {
-          el.children.remove(t);
+          t.remove();
         } else {
           t.children.clear();
         }
@@ -179,6 +208,88 @@ class Session {
     (int, int) p = _insertPos(el, name);
     el.children.insert(p.$1, t);
     return;
+  }
+
+  void setDate(int index, DateType dt, String? value) {
+    XmlElement? el = nodes[index];
+    if (el == null) return;
+    XmlElement? t = el.getElement("DateRange");
+    if (t == null) {
+      if (value == null) return;
+      t = XmlElement(XmlName("DateRange"), [], [
+        XmlElement(XmlName(dt.toString()), [], [XmlText(value)], false),
+      ], false);
+      (int, int) p = _insertPos(el, "DateRange");
+      el.children.insert(p.$1, t);
+      return;
+    } else {
+      XmlElement? d = t.getElement(dt.toString());
+      if (d == null) {
+        if (value != null) {
+          d = XmlElement(XmlName(dt.toString()), [], [XmlText(value)], false);
+          (dt == DateType.start) ? t.children.insert(0, d) : t.children.add(d);
+        }
+        return;
+      }
+      // delete
+      if (value == null) {
+        if (d.attributes.isEmpty) {
+          d.remove();
+          if (t.children.isEmpty) t.remove;
+        } else {
+          d.children.clear();
+        }
+      } else {
+        // update
+        d.innerText = value;
+      }
+    }
+  }
+
+  void setCirca(int index, DateType dt, bool value) {
+    XmlElement? el = nodes[index];
+    if (el == null) return;
+    XmlElement? t = el.getElement("DateRange");
+    if (t == null) {
+      if (!value) return;
+      t = XmlElement(XmlName("DateRange"), [], [
+        XmlElement(
+          XmlName(dt.toString()),
+          [XmlAttribute(XmlName("circa"), "true")],
+          [],
+          false,
+        ),
+      ], false);
+      (int, int) p = _insertPos(el, "DateRange");
+      el.children.insert(p.$1, t);
+      return;
+    } else {
+      XmlElement? d = t.getElement(dt.toString());
+      if (d == null) {
+        if (value) {
+          d = XmlElement(
+            XmlName(dt.toString()),
+            [XmlAttribute(XmlName("circa"), "true")],
+            [],
+            false,
+          );
+          (dt == DateType.start) ? t.children.insert(0, d) : t.children.add(d);
+        }
+        return;
+      }
+      // delete
+      if (!value) {
+        if (d.children.isEmpty) {
+          d.remove();
+          if (t.children.isEmpty) t.remove;
+        } else {
+          d.setAttribute("circa", null, namespace: _ns);
+        }
+      } else {
+        // update
+        d.setAttribute("circa", "true", namespace: _ns);
+      }
+    }
   }
 
   List<XmlElement>? getParagraphs(int index, String name) {
@@ -397,7 +508,7 @@ class Session {
     if (val == null) {
       if (t != null) {
         if (t.attributes.isEmpty) {
-          el.children.remove(t);
+          t.remove();
         } else {
           t.children.clear();
         }
